@@ -36,15 +36,74 @@ M.get_max_width = function(header, lines)
   return colMaxWidth
 end
 
+---@param text string
+---@param maxWidth number
+---@return string
+M.truncate_text = function(text, maxWidth)
+  if maxWidth <= 0 then
+    return text
+  end
+  
+  local displayLength = utils.getStringDisplayLength(text)
+  if displayLength <= maxWidth then
+    return text
+  end
+  
+  -- Truncate with ellipsis
+  local truncated = ""
+  local currentLength = 0
+  local ellipsis = "…"
+  local ellipsisLength = utils.getStringDisplayLength(ellipsis)
+  local targetLength = maxWidth - ellipsisLength
+  
+  for i = 1, #text do
+    local char = text:sub(i, i)
+    local charLength = utils.getStringDisplayLength(char)
+    
+    if currentLength + charLength > targetLength then
+      break
+    end
+    
+    truncated = truncated .. char
+    currentLength = currentLength + charLength
+  end
+  
+  return truncated .. ellipsis
+end
+
+---@param header string[]
+---@param lines table<string, string>[]
+---@param maxColumnWidth number
+---@return table<string, number>
+M.get_max_width_with_truncation = function(header, lines, maxColumnWidth)
+  local colMaxWidth = M.get_max_width(header, lines)
+  
+  if maxColumnWidth > 0 then
+    for colName, width in pairs(colMaxWidth) do
+      colMaxWidth[colName] = math.min(width, maxColumnWidth)
+    end
+  end
+  
+  return colMaxWidth
+end
+
 ---@param header string[]
 ---@param colMaxWidth table<string, number>
 ---@return string[]
 M.format_header = function(header, colMaxWidth)
   local formatedHeader = ""
   for _, colName in ipairs(header) do
-    local spaceNum = colMaxWidth[colName] - utils.getStringDisplayLength(colName)
+    local displayName = colName
+    local maxWidth = colMaxWidth[colName]
+    
+    -- Truncate header if it's longer than the max width
+    if utils.getStringDisplayLength(displayName) > maxWidth then
+      displayName = M.truncate_text(displayName, maxWidth)
+    end
+    
+    local spaceNum = maxWidth - utils.getStringDisplayLength(displayName)
     local spaceStr = string.rep(" ", math.floor(spaceNum / 2))
-    formatedHeader = formatedHeader .. "|" .. spaceStr .. colName .. spaceStr .. string.rep(" ", spaceNum % 2)
+    formatedHeader = formatedHeader .. "|" .. spaceStr .. displayName .. spaceStr .. string.rep(" ", spaceNum % 2)
   end
   formatedHeader = formatedHeader .. "|"
 
@@ -63,9 +122,17 @@ M.format_body = function(bodyLines, header, colMaxWidth)
   for _, line in ipairs(bodyLines) do
     local formatedLine = ""
     for _, colName in ipairs(header) do
-      local spaceNum = colMaxWidth[colName] - (utils.getStringDisplayLength(line[colName]))
+      local cellText = line[colName] or ""
+      local maxWidth = colMaxWidth[colName]
+      
+      -- Truncate text if it's longer than the max width
+      if utils.getStringDisplayLength(cellText) > maxWidth then
+        cellText = M.truncate_text(cellText, maxWidth)
+      end
+      
+      local spaceNum = maxWidth - utils.getStringDisplayLength(cellText)
       local spaceStr = string.rep(" ", spaceNum)
-      formatedLine = formatedLine .. "|" .. line[colName] .. spaceStr
+      formatedLine = formatedLine .. "|" .. cellText .. spaceStr
     end
     formatedLine = formatedLine .. "|"
     table.insert(formatedLines, formatedLine)
@@ -110,6 +177,7 @@ M.create_bufs = function(tablesData)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.next_table, ":DataViewerNextTable<CR>", KEYMAP_OPTS)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.prev_table, ":DataViewerPrevTable<CR>", KEYMAP_OPTS)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.quit, ":DataViewerClose<CR>", KEYMAP_OPTS)
+    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.toggle_truncate, ":DataViewerToggleTruncate<CR>", KEYMAP_OPTS)
     tablesData[tableName]["bufnum"] = buf
     if first_bufnum == -1 then
       first_bufnum = buf
@@ -129,6 +197,10 @@ M.open_win = function(opts)
     local win = vim.api.nvim_get_current_win()
     vim.api.nvim_buf_set_option(buf_id, "buflisted", true)
     vim.api.nvim_set_current_buf(buf_id)
+    
+    -- Set wrap behavior for non-floating windows
+    vim.api.nvim_win_set_option(win, "wrap", config.config.view.wrap)
+    
     return win
   end
 
@@ -150,7 +222,7 @@ M.open_win = function(opts)
   })
 
   -- Set the window options
-  vim.api.nvim_win_set_option(win, "wrap", false)
+  vim.api.nvim_win_set_option(win, "wrap", config.config.view.wrap)
   vim.api.nvim_win_set_option(win, "number", false)
   vim.api.nvim_win_set_option(win, "cursorline", false)
   return win
@@ -162,8 +234,16 @@ end
 M.highlight_header = function(bufnum, headers, colMaxWidth)
   local curPos = 1
   for j, colName in ipairs(headers) do
+    local displayName = colName
+    local maxWidth = colMaxWidth[colName]
+    
+    -- Truncate header if it's longer than the max width (same logic as format_header)
+    if utils.getStringDisplayLength(displayName) > maxWidth then
+      displayName = M.truncate_text(displayName, maxWidth)
+    end
+    
     local hlStart = curPos
-    local hlEnd = hlStart + string.len(colName) + colMaxWidth[colName] - utils.getStringDisplayLength(colName)
+    local hlEnd = hlStart + string.len(displayName) + maxWidth - utils.getStringDisplayLength(displayName)
 
     vim.api.nvim_buf_add_highlight(
       bufnum,
@@ -185,9 +265,16 @@ M.highlight_rows = function(bufnum, headers, bodyLines, colMaxWidth)
   for i = 1, #bodyLines do
     local curPos = 1
     for j, colName in ipairs(headers) do
-      local curCellText = bodyLines[i][colName]
+      local curCellText = bodyLines[i][colName] or ""
+      local maxWidth = colMaxWidth[colName]
+      
+      -- Truncate text if it's longer than the max width (same logic as format_body)
+      if utils.getStringDisplayLength(curCellText) > maxWidth then
+        curCellText = M.truncate_text(curCellText, maxWidth)
+      end
+      
       local hlStart = curPos
-      local hlEnd = hlStart + string.len(curCellText) + colMaxWidth[colName] - utils.getStringDisplayLength(curCellText)
+      local hlEnd = hlStart + string.len(curCellText) + maxWidth - utils.getStringDisplayLength(curCellText)
 
       vim.api.nvim_buf_add_highlight(
         bufnum,

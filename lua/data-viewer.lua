@@ -19,6 +19,7 @@ M.cur_table = 1
 M.win_id = -1
 M.parsed_data = {}
 M.header_info = {}
+M.is_truncated = false
 
 M.setup = function(args)
   config.setup(args) -- setup config
@@ -54,9 +55,21 @@ M.start = function(opts)
   local headerStr, headerInfo = module.get_win_header_str(parsedData)
   for tableName, tableData in pairs(parsedData) do
     parsedData[tableName]["colMaxWidth"] = module.get_max_width(tableData.headers, tableData.bodyLines)
+    
+    -- Apply truncation if enabled by default
+    local colMaxWidth = parsedData[tableName]["colMaxWidth"]
+    if config.config.view.maxColumnWidth > 0 then
+      M.is_truncated = true
+      local truncatedColMaxWidth = {}
+      for colName, width in pairs(colMaxWidth) do
+        truncatedColMaxWidth[colName] = math.min(width, config.config.view.maxColumnWidth)
+      end
+      colMaxWidth = truncatedColMaxWidth
+    end
+    
     parsedData[tableName]["formatedLines"] = utils.merge_array(
       { headerStr },
-      module.format_lines(tableData.headers, tableData.bodyLines, tableData["colMaxWidth"])
+      module.format_lines(tableData.headers, tableData.bodyLines, colMaxWidth)
     )
   end
 
@@ -110,6 +123,54 @@ M.close_tables = function()
   -- Close popup window
   if config.config.view.float and utils.check_win_valid(M.win_id) then
     vim.api.nvim_win_close(M.win_id, true)
+  end
+end
+
+M.toggle_truncate = function()
+  if not utils.check_win_valid(M.win_id) then
+    return
+  end
+  
+  M.is_truncated = not M.is_truncated
+  
+  -- Regenerate header string
+  local headerStr, headerInfo = module.get_win_header_str(M.parsed_data)
+  
+  -- Regenerate formatted lines for all tables with new truncation setting
+  for tableName, tableData in pairs(M.parsed_data) do
+    local colMaxWidth = tableData.colMaxWidth
+    if M.is_truncated and config.config.view.maxColumnWidth > 0 then
+      -- Apply truncation to column widths
+      local truncatedColMaxWidth = {}
+      for colName, width in pairs(colMaxWidth) do
+        truncatedColMaxWidth[colName] = math.min(width, config.config.view.maxColumnWidth)
+      end
+      colMaxWidth = truncatedColMaxWidth
+    end
+    
+    local formatedLines = utils.merge_array(
+      { headerStr },
+      module.format_lines(tableData.headers, tableData.bodyLines, colMaxWidth)
+    )
+    
+    -- Update buffer content
+    vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", true)
+    vim.api.nvim_buf_set_lines(tableData.bufnum, 0, -1, false, formatedLines)
+    vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", false)
+    
+    -- Reapply highlights if enabled
+    if config.config.columnColorEnable then
+      vim.api.nvim_buf_clear_namespace(tableData.bufnum, 0, 0, -1)
+      module.highlight_header(tableData.bufnum, tableData.headers, colMaxWidth)
+      module.highlight_rows(tableData.bufnum, tableData.headers, tableData.bodyLines, colMaxWidth)
+    end
+  end
+  
+  -- Update header info and re-highlight table headers
+  M.header_info = headerInfo
+  for _, header in ipairs(M.header_info) do
+    local bufnum = M.parsed_data[header.name].bufnum
+    module.highlight_tables_header(bufnum, header)
   end
 end
 
