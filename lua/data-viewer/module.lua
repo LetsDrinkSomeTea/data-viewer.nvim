@@ -187,6 +187,33 @@ M.create_bufs = function(tablesData)
   return first_bufnum, tablesData
 end
 
+---@param tablesData table<string, any>
+---@return number, table<string, any>
+M.create_bufs_empty = function(tablesData)
+  local first_bufnum = -1
+  for tableName, tableData in pairs(tablesData) do
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_option(buf, "modifiable", false)
+    vim.api.nvim_buf_set_name(buf, "DataViwer-" .. tableName)
+    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.next_table, ":DataViewerNextTable<CR>", KEYMAP_OPTS)
+    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.prev_table, ":DataViewerPrevTable<CR>", KEYMAP_OPTS)
+    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.quit, ":DataViewerClose<CR>", KEYMAP_OPTS)
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      "n",
+      config.config.keymap.toggle_adaptive,
+      ":DataViewerToggleAdaptive<CR>",
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.expand_cell, ":DataViewerExpandCell<CR>", KEYMAP_OPTS)
+    tablesData[tableName]["bufnum"] = buf
+    if first_bufnum == -1 then
+      first_bufnum = buf
+    end
+  end
+  return first_bufnum, tablesData
+end
+
 ---@tparam buf_id number
 ---@tparam force_replace boolean
 ---@return number
@@ -374,6 +401,9 @@ end
 ---@param content string
 ---@param columnName string
 M.show_cell_popup = function(content, columnName)
+  -- Convert content to string if it's not already
+  content = tostring(content)
+  
   -- Create a scratch buffer for the popup
   local buf = vim.api.nvim_create_buf(false, true)
 
