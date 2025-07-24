@@ -1,4 +1,4 @@
-*data-viewer-docs.txt*    For Neovim >= 0.8.0    Last change: 2023 November 03
+*data-viewer-docs.txt*      For Neovim >= 0.8.0      Last change: 2025 July 24
 
 ==============================================================================
 Table of Contents                         *data-viewer-docs-table-of-contents*
@@ -54,7 +54,7 @@ INSTALLATION                   *data-viewer-docs-dataviewer.nvim-installation*
 LAZY: ~
 
 >lua
-    requir("lazy").setup({
+    require("lazy").setup({
       {
         'vidocqh/data-viewer.nvim',
         opts = {},
@@ -64,6 +64,13 @@ LAZY: ~
         }
       },
     })
+<
+
+
+PAQ: ~
+
+>lua
+    require('data-viewer').setup()
 <
 
 
