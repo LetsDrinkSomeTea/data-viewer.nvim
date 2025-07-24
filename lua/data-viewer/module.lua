@@ -194,7 +194,15 @@ M.create_bufs_empty = function(tablesData)
   for tableName, tableData in pairs(tablesData) do
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_option(buf, "modifiable", false)
-    vim.api.nvim_buf_set_name(buf, "DataViwer-" .. tableName)
+    
+    -- Check if buffer with this name exists and delete it
+    local buf_name = "DataViwer-" .. tableName
+    local existing_buf = vim.fn.bufnr(buf_name)
+    if existing_buf ~= -1 then
+      vim.api.nvim_buf_delete(existing_buf, { force = true })
+    end
+    
+    vim.api.nvim_buf_set_name(buf, buf_name)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.next_table, ":DataViewerNextTable<CR>", KEYMAP_OPTS)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.prev_table, ":DataViewerPrevTable<CR>", KEYMAP_OPTS)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.quit, ":DataViewerClose<CR>", KEYMAP_OPTS)
