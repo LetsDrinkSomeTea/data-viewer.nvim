@@ -19,6 +19,7 @@ M.cur_table = 1
 M.win_id = -1
 M.parsed_data = {}
 M.header_info = {}
+M.adaptive_mode = true
 
 M.setup = function(args)
   config.setup(args) -- setup config
@@ -52,6 +53,8 @@ M.start = function(opts)
   end
 
   local headerStr, headerInfo = module.get_win_header_str(parsedData)
+  M.adaptive_mode = config.config.view.adaptiveColumns
+
   for tableName, tableData in pairs(parsedData) do
     parsedData[tableName]["colMaxWidth"] = module.get_max_width(tableData.headers, tableData.bodyLines)
     parsedData[tableName]["formatedLines"] = utils.merge_array(
@@ -63,9 +66,23 @@ M.start = function(opts)
   local first_bufnum = -1
   first_bufnum, parsedData = module.create_bufs(parsedData)
 
+  M.win_id = module.open_win({ first_bufnum, opts.force_replace })
+
+  -- Apply adaptive formatting after window is created
+  if M.adaptive_mode then
+    local bufferWidth = module.get_effective_width(M.win_id)
+    for tableName, tableData in pairs(parsedData) do
+      local adaptiveWidth = module.get_adaptive_width(tableData.headers, tableData.bodyLines, bufferWidth)
+      local adaptiveLines =
+        utils.merge_array({ headerStr }, module.format_lines(tableData.headers, tableData.bodyLines, adaptiveWidth))
+      vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", true)
+      vim.api.nvim_buf_set_lines(tableData.bufnum, 0, -1, false, adaptiveLines)
+      vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", false)
+    end
+  end
+
   M.parsed_data = parsedData
   M.header_info = headerInfo
-  M.win_id = module.open_win { first_bufnum, opts.force_replace }
 
   for _, header in ipairs(M.header_info) do
     local bufnum = parsedData[header.name].bufnum
@@ -111,6 +128,96 @@ M.close_tables = function()
   if config.config.view.float and utils.check_win_valid(M.win_id) then
     vim.api.nvim_win_close(M.win_id, true)
   end
+end
+
+M.toggle_adaptive = function()
+  if not utils.check_win_valid(M.win_id) then
+    return
+  end
+
+  M.adaptive_mode = not M.adaptive_mode
+  M.refresh_current_table()
+end
+
+M.refresh_current_table = function()
+  if not utils.check_win_valid(M.win_id) then
+    return
+  end
+
+  local currentTableName = M.header_info[M.cur_table].name
+  local tableData = M.parsed_data[currentTableName]
+
+  -- Get buffer width
+  local bufferWidth = module.get_effective_width(M.win_id)
+
+  -- Calculate column widths based on mode
+  local colMaxWidth
+  if M.adaptive_mode then
+    colMaxWidth = module.get_adaptive_width(tableData.headers, tableData.bodyLines, bufferWidth)
+  else
+    colMaxWidth = tableData.colMaxWidth
+  end
+
+  -- Reformat lines
+  local headerStr, _ = module.get_win_header_str(M.parsed_data)
+  local formatedLines =
+    utils.merge_array({ headerStr }, module.format_lines(tableData.headers, tableData.bodyLines, colMaxWidth))
+
+  -- Update buffer content
+  vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", true)
+  vim.api.nvim_buf_set_lines(tableData.bufnum, 0, -1, false, formatedLines)
+  vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", false)
+  vim.api.nvim_win_set_option(M.win_id, "wrap", false)
+
+  -- Refresh highlighting
+  if config.config.columnColorEnable then
+    vim.api.nvim_buf_clear_namespace(tableData.bufnum, 0, 0, -1)
+    local header = M.header_info[M.cur_table]
+    module.highlight_tables_header(tableData.bufnum, header)
+    module.highlight_header(tableData.bufnum, tableData.headers, colMaxWidth)
+    module.highlight_rows(tableData.bufnum, tableData.headers, tableData.bodyLines, colMaxWidth)
+  end
+end
+
+M.expand_cell = function()
+  if not utils.check_win_valid(M.win_id) then
+    return
+  end
+
+  local currentTableName = M.header_info[M.cur_table].name
+  local tableData = M.parsed_data[currentTableName]
+
+  -- Get cursor position
+  local cursor = vim.api.nvim_win_get_cursor(M.win_id)
+  local row = cursor[1]
+  local col = cursor[2]
+
+  if row <= 4 then
+    return
+  end
+
+  -- Calculate which data row and column we're in
+  local dataRow = row - 4 -- Adjust for header rows
+  if dataRow > #tableData.bodyLines then
+    return
+  end
+
+  -- Find which column the cursor is in
+  local line = vim.api.nvim_buf_get_lines(tableData.bufnum, row - 1, row, false)[1]
+  if not line then
+    return
+  end
+
+  local columnIndex = module.get_column_at_position(line, col, tableData.headers)
+  if not columnIndex then
+    return
+  end
+
+  local columnName = tableData.headers[columnIndex]
+  local cellContent = tableData.bodyLines[dataRow][columnName]
+
+  -- Show cell content in floating window
+  module.show_cell_popup(cellContent, columnName)
 end
 
 return M

@@ -2,22 +2,28 @@
 ---@field width number
 ---@field height number
 ---@field zindex number
+---@field adaptiveColumns boolean
 local ViewConfig = {
   float = true, -- use float window or not
   width = 0.8,
   height = 0.8,
   zindex = 50,
   relative = true,
+  adaptiveColumns = true, -- default to truncated adaptive display
 }
 
 ---@class KeymapConfig
 ---@field quit string
 ---@field next_table string
 ---@field prev_table string
+---@field toggle_adaptive string
+---@field expand_cell string
 local KeymapConfig = {
   quit = "q",
   next_table = "<C-l>",
   prev_table = "<C-h>",
+  toggle_adaptive = "<C-t>",
+  expand_cell = "<C-e>",
 }
 
 ---@class Config
