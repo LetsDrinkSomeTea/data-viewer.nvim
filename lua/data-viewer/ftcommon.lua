@@ -8,5 +8,7 @@ local config = require("data-viewer.config")
 vim.api.nvim_buf_set_option(0, "wrap", config.config.view.wrap)
 
 if config.config.autoDisplayWhenOpenFile then
-  vim.schedule(function () require("data-viewer").start({ args = "" }) end)
+  vim.schedule(function()
+    require("data-viewer").start({ args = "" })
+  end)
 end

@@ -42,6 +42,19 @@ Lightweight neovim plugin provides a table view for inspect data files such as `
 - `:DataViewerClose`
 - `:DataViewerToggleTruncate` -- toggle between truncated and full width columns
 
+## Features
+
+### Intelligent Column Sizing
+
+When `maxColumnWidth` is set to a value greater than 0, data-viewer uses an intelligent algorithm to size columns based on the buffer width:
+
+1. **Buffer-aware sizing**: Calculates maximum column width as `buffer_width / number_of_columns`
+2. **Space redistribution**: Columns that don't need the full width give their extra space to columns that do
+3. **Always fits**: Tables are guaranteed to fit completely within the buffer without horizontal scrolling
+4. **Runtime toggle**: Use `<C-t>` (or your configured keymap) to switch between truncated and full-width views
+
+This ensures optimal space utilization regardless of your screen size or window dimensions.
+
 ## Installation
 
 ### Lazy:
@@ -79,7 +92,7 @@ When working with wide tables, you have several options to improve readability:
 require('data-viewer').setup({
   view = {
     wrap = false,        -- Disable wrap to prevent ugly formatting
-    maxColumnWidth = 30, -- Truncate columns wider than 30 characters
+    maxColumnWidth = 30, -- Enable intelligent column sizing (0 = disabled, >0 = enabled)
   },
   keymap = {
     toggle_truncate = "<C-t>", -- Press Ctrl+T to toggle truncation
@@ -106,7 +119,7 @@ local config = {
     zindex = 50, -- Valid when float = true
     relative = true, -- If to open the window relative to the current buffer, valid when float = true
     wrap = false, -- Control wrap behavior for data viewer windows
-    maxColumnWidth = 50, -- Maximum width for columns when truncation is enabled (0 = no truncation)
+    maxColumnWidth = 50, -- Enable buffer-aware intelligent column sizing (0 = disabled, >0 = enabled)
   },
   keymap = {
     quit = "q",

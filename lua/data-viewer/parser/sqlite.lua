@@ -33,7 +33,7 @@ local parse = function(filepath)
     return "SQL dependency not installed"
   end
 
-  if type(filepath) == 'number' then
+  if type(filepath) == "number" then
     filepath = vim.api.nvim_buf_get_name(filepath)
   end
 

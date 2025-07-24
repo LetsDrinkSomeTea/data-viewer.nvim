@@ -32,7 +32,6 @@ local function getHeaders(headerStr, delim)
   return parseLine(headerStr, delim)
 end
 
-
 ---@param csvLines string[]
 ---@param headers string[]
 ---@param delim string
@@ -51,19 +50,18 @@ local function getBody(csvLines, headers, delim)
   return body
 end
 
-
 ---@param fileType string
 ---@param delim string
 local function createParse(fileType, delim)
   ---@param filepath string
   return function(filepath)
-	  local lines = utils.read_file(filepath)
-	  local headers = getHeaders(lines[1], delim)
-	  table.remove(lines, 1)
-	  local bodyLines = getBody(lines, headers, delim)
-	  local out = {}
-	  out[fileType] = { headers = headers, bodyLines = bodyLines }
-	  return out
+    local lines = utils.read_file(filepath)
+    local headers = getHeaders(lines[1], delim)
+    table.remove(lines, 1)
+    local bodyLines = getBody(lines, headers, delim)
+    local out = {}
+    out[fileType] = { headers = headers, bodyLines = bodyLines }
+    return out
   end
 end
 

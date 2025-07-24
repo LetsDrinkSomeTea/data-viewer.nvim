@@ -43,31 +43,31 @@ M.truncate_text = function(text, maxWidth)
   if maxWidth <= 0 then
     return text
   end
-  
+
   local displayLength = utils.getStringDisplayLength(text)
   if displayLength <= maxWidth then
     return text
   end
-  
+
   -- Truncate with ellipsis
   local truncated = ""
   local currentLength = 0
   local ellipsis = "…"
   local ellipsisLength = utils.getStringDisplayLength(ellipsis)
   local targetLength = maxWidth - ellipsisLength
-  
+
   for i = 1, #text do
     local char = text:sub(i, i)
     local charLength = utils.getStringDisplayLength(char)
-    
+
     if currentLength + charLength > targetLength then
       break
     end
-    
+
     truncated = truncated .. char
     currentLength = currentLength + charLength
   end
-  
+
   return truncated .. ellipsis
 end
 
@@ -77,14 +77,72 @@ end
 ---@return table<string, number>
 M.get_max_width_with_truncation = function(header, lines, maxColumnWidth)
   local colMaxWidth = M.get_max_width(header, lines)
-  
+
   if maxColumnWidth > 0 then
     for colName, width in pairs(colMaxWidth) do
       colMaxWidth[colName] = math.min(width, maxColumnWidth)
     end
   end
-  
+
   return colMaxWidth
+end
+
+---@param header string[]
+---@param lines table<string, string>[]
+---@param bufferWidth number
+---@return table<string, number>
+M.get_buffer_aware_column_widths = function(header, lines, bufferWidth)
+  local colMaxWidth = M.get_max_width(header, lines)
+  local numColumns = #header
+
+  if numColumns == 0 or bufferWidth <= 0 then
+    return colMaxWidth
+  end
+
+  -- Calculate available width for content (subtract table borders)
+  -- Each column has 1 border char, plus 1 for the final border
+  local borderWidth = numColumns + 1
+  local availableWidth = math.max(1, bufferWidth - borderWidth)
+
+  -- Calculate base width per column
+  local baseMaxWidth = math.floor(availableWidth / numColumns)
+
+  -- Ensure minimum column width of 3 (for "ab…" format)
+  local minColumnWidth = 3
+  baseMaxWidth = math.max(minColumnWidth, baseMaxWidth)
+
+  -- First pass: assign base width or actual width if smaller
+  local assignedWidths = {}
+  local totalUsedWidth = 0
+  local columnsNeedingMore = {}
+
+  for _, colName in ipairs(header) do
+    local actualWidth = colMaxWidth[colName]
+    if actualWidth <= baseMaxWidth then
+      assignedWidths[colName] = actualWidth
+      totalUsedWidth = totalUsedWidth + actualWidth
+    else
+      assignedWidths[colName] = baseMaxWidth
+      totalUsedWidth = totalUsedWidth + baseMaxWidth
+      table.insert(columnsNeedingMore, colName)
+    end
+  end
+
+  -- Second pass: redistribute unused width to columns that need more
+  if #columnsNeedingMore > 0 then
+    local unusedWidth = availableWidth - totalUsedWidth
+    local extraWidthPerColumn = math.floor(unusedWidth / #columnsNeedingMore)
+
+    if extraWidthPerColumn > 0 then
+      for _, colName in ipairs(columnsNeedingMore) do
+        local actualWidth = colMaxWidth[colName]
+        local newWidth = math.min(actualWidth, assignedWidths[colName] + extraWidthPerColumn)
+        assignedWidths[colName] = newWidth
+      end
+    end
+  end
+
+  return assignedWidths
 end
 
 ---@param header string[]
@@ -95,12 +153,12 @@ M.format_header = function(header, colMaxWidth)
   for _, colName in ipairs(header) do
     local displayName = colName
     local maxWidth = colMaxWidth[colName]
-    
+
     -- Truncate header if it's longer than the max width
     if utils.getStringDisplayLength(displayName) > maxWidth then
       displayName = M.truncate_text(displayName, maxWidth)
     end
-    
+
     local spaceNum = maxWidth - utils.getStringDisplayLength(displayName)
     local spaceStr = string.rep(" ", math.floor(spaceNum / 2))
     formatedHeader = formatedHeader .. "|" .. spaceStr .. displayName .. spaceStr .. string.rep(" ", spaceNum % 2)
@@ -124,12 +182,12 @@ M.format_body = function(bodyLines, header, colMaxWidth)
     for _, colName in ipairs(header) do
       local cellText = line[colName] or ""
       local maxWidth = colMaxWidth[colName]
-      
+
       -- Truncate text if it's longer than the max width
       if utils.getStringDisplayLength(cellText) > maxWidth then
         cellText = M.truncate_text(cellText, maxWidth)
       end
-      
+
       local spaceNum = maxWidth - utils.getStringDisplayLength(cellText)
       local spaceStr = string.rep(" ", spaceNum)
       formatedLine = formatedLine .. "|" .. cellText .. spaceStr
@@ -177,7 +235,13 @@ M.create_bufs = function(tablesData)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.next_table, ":DataViewerNextTable<CR>", KEYMAP_OPTS)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.prev_table, ":DataViewerPrevTable<CR>", KEYMAP_OPTS)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.quit, ":DataViewerClose<CR>", KEYMAP_OPTS)
-    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.toggle_truncate, ":DataViewerToggleTruncate<CR>", KEYMAP_OPTS)
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      "n",
+      config.config.keymap.toggle_truncate,
+      ":DataViewerToggleTruncate<CR>",
+      KEYMAP_OPTS
+    )
     tablesData[tableName]["bufnum"] = buf
     if first_bufnum == -1 then
       first_bufnum = buf
@@ -197,10 +261,10 @@ M.open_win = function(opts)
     local win = vim.api.nvim_get_current_win()
     vim.api.nvim_buf_set_option(buf_id, "buflisted", true)
     vim.api.nvim_set_current_buf(buf_id)
-    
+
     -- Set wrap behavior for non-floating windows
     vim.api.nvim_win_set_option(win, "wrap", config.config.view.wrap)
-    
+
     return win
   end
 
@@ -236,12 +300,12 @@ M.highlight_header = function(bufnum, headers, colMaxWidth)
   for j, colName in ipairs(headers) do
     local displayName = colName
     local maxWidth = colMaxWidth[colName]
-    
+
     -- Truncate header if it's longer than the max width (same logic as format_header)
     if utils.getStringDisplayLength(displayName) > maxWidth then
       displayName = M.truncate_text(displayName, maxWidth)
     end
-    
+
     local hlStart = curPos
     local hlEnd = hlStart + string.len(displayName) + maxWidth - utils.getStringDisplayLength(displayName)
 
@@ -267,12 +331,12 @@ M.highlight_rows = function(bufnum, headers, bodyLines, colMaxWidth)
     for j, colName in ipairs(headers) do
       local curCellText = bodyLines[i][colName] or ""
       local maxWidth = colMaxWidth[colName]
-      
+
       -- Truncate text if it's longer than the max width (same logic as format_body)
       if utils.getStringDisplayLength(curCellText) > maxWidth then
         curCellText = M.truncate_text(curCellText, maxWidth)
       end
-      
+
       local hlStart = curPos
       local hlEnd = hlStart + string.len(curCellText) + maxWidth - utils.getStringDisplayLength(curCellText)
 

@@ -11,7 +11,7 @@ local ViewConfig = {
   zindex = 50,
   relative = true,
   wrap = false, -- control wrap behavior for data viewer windows
-  maxColumnWidth = 50, -- maximum width for columns when truncation is enabled (0 = no truncation)
+  maxColumnWidth = 50, -- enable buffer-aware column sizing with redistribution (0 = disabled, >0 = enabled)
 }
 
 ---@class KeymapConfig
