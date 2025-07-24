@@ -40,6 +40,17 @@ Lightweight neovim plugin provides a table view for inspect data files such as `
 - `:DataViewerPrevTable`
 
 - `:DataViewerClose`
+- `:DataViewerSave` -- save changes back to the original file (CSV/TSV only)
+
+### Editable Tables
+
+The table view is now editable! You can:
+- Edit cell values directly in the table display
+- Use `Ctrl+S` (or `:DataViewerSave`) to save changes back to the original file
+- Currently supports CSV and TSV files
+- Column structure (headers and count) should remain unchanged for proper saving
+
+**Note**: When editing, maintain the table format structure. The plugin will parse your edits and save them back to the original file format.
 
 ## Installation
 
@@ -89,6 +100,7 @@ local config = {
     quit = "q",
     next_table = "<C-l>",
     prev_table = "<C-h>",
+    save = "<C-s>",
   },
 }
 ```

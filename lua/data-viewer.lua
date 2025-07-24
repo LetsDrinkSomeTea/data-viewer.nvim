@@ -155,6 +155,22 @@ M.save = function()
     return
   end
   
+  -- Validate that the structure matches the original
+  local original_table_name = M.header_info[M.cur_table].name
+  local original_headers = M.parsed_data[original_table_name].headers
+  
+  if #headers ~= #original_headers then
+    vim.print("Error: Number of columns changed. Expected " .. #original_headers .. " columns, found " .. #headers)
+    return
+  end
+  
+  -- Check if column names match (order matters for CSV/TSV)
+  for i, header in ipairs(headers) do
+    if header ~= original_headers[i] then
+      vim.print("Warning: Column '" .. original_headers[i] .. "' changed to '" .. header .. "' in position " .. i)
+    end
+  end
+  
   -- Determine delimiter
   local delim = M.original_filetype == "csv" and "," or "\t"
   
