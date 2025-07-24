@@ -40,6 +40,7 @@ Lightweight neovim plugin provides a table view for inspect data files such as `
 - `:DataViewerPrevTable`
 
 - `:DataViewerClose`
+- `:DataViewerToggleTruncate` -- toggle between truncated and full width columns
 
 ## Installation
 
@@ -66,6 +67,26 @@ require('data-viewer').setup()
 
 ## Config
 
+### Wrap Behavior and Wide Tables
+
+When working with wide tables, you have several options to improve readability:
+
+1. **Disable wrap** (default): Prevents ugly text wrapping within table cells
+2. **Column truncation**: Automatically limit column width and show ellipsis for long content
+3. **Runtime toggle**: Switch between truncated and full-width views using the configured keymap
+
+```lua
+require('data-viewer').setup({
+  view = {
+    wrap = false,        -- Disable wrap to prevent ugly formatting
+    maxColumnWidth = 30, -- Truncate columns wider than 30 characters
+  },
+  keymap = {
+    toggle_truncate = "<C-t>", -- Press Ctrl+T to toggle truncation
+  },
+})
+```
+
 ### Default config:
 
 ```lua
@@ -84,11 +105,14 @@ local config = {
     height = 0.8, -- Less than 1 means ratio to screen height, valid when float = true
     zindex = 50, -- Valid when float = true
     relative = true, -- If to open the window relative to the current buffer, valid when float = true
+    wrap = false, -- Control wrap behavior for data viewer windows
+    maxColumnWidth = 50, -- Maximum width for columns when truncation is enabled (0 = no truncation)
   },
   keymap = {
     quit = "q",
     next_table = "<C-l>",
     prev_table = "<C-h>",
+    toggle_truncate = "<C-t>",
   },
 }
 ```
