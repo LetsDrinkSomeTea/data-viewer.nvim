@@ -14,10 +14,12 @@ local ViewConfig = {
 ---@field quit string
 ---@field next_table string
 ---@field prev_table string
+---@field save string
 local KeymapConfig = {
   quit = "q",
   next_table = "<C-l>",
   prev_table = "<C-h>",
+  save = "<C-s>",
 }
 
 ---@class Config

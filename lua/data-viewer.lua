@@ -19,6 +19,8 @@ M.cur_table = 1
 M.win_id = -1
 M.parsed_data = {}
 M.header_info = {}
+M.original_filepath = nil
+M.original_filetype = nil
 
 M.setup = function(args)
   config.setup(args) -- setup config
@@ -50,6 +52,10 @@ M.start = function(opts)
     vim.print(parsedData)
     return
   end
+
+  -- Store original file info for saving
+  M.original_filepath = filepath
+  M.original_filetype = ft
 
   local headerStr, headerInfo = module.get_win_header_str(parsedData)
   for tableName, tableData in pairs(parsedData) do
@@ -111,6 +117,57 @@ M.close_tables = function()
   if config.config.view.float and utils.check_win_valid(M.win_id) then
     vim.api.nvim_win_close(M.win_id, true)
   end
+end
+
+M.save = function()
+  if not M.original_filepath or not M.original_filetype then
+    vim.print("No original file information available")
+    return
+  end
+  
+  if M.original_filetype ~= "csv" and M.original_filetype ~= "tsv" then
+    vim.print("Saving is only supported for CSV and TSV files currently")
+    return
+  end
+  
+  local current_table_name = M.header_info[M.cur_table].name
+  local current_buf = M.parsed_data[current_table_name].bufnum
+  
+  if not vim.api.nvim_buf_is_valid(current_buf) then
+    vim.print("Current buffer is not valid")
+    return
+  end
+  
+  -- Get current buffer content
+  local lines = vim.api.nvim_buf_get_lines(current_buf, 0, -1, false)
+  
+  -- Parse the formatted table back to data structure
+  local table_parser = require("data-viewer.parser.table_parser")
+  local headers, body_lines, error_msg = table_parser.parse_formatted_table(lines)
+  
+  if error_msg then
+    vim.print("Error parsing table: " .. error_msg)
+    return
+  end
+  
+  if not headers or #headers == 0 then
+    vim.print("No headers found in table")
+    return
+  end
+  
+  -- Determine delimiter
+  local delim = M.original_filetype == "csv" and "," or "\t"
+  
+  -- Write back to file
+  local fsv_writer = require("data-viewer.writer.fsv")
+  local success, write_error = fsv_writer.write(headers, body_lines or {}, M.original_filepath, delim)
+  
+  if not success then
+    vim.print("Error saving file: " .. (write_error or "unknown error"))
+    return
+  end
+  
+  vim.print("File saved successfully")
 end
 
 return M
