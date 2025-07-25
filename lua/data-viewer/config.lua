@@ -2,23 +2,29 @@
 ---@field width number
 ---@field height number
 ---@field zindex number
+---@field adaptiveColumns boolean
 local ViewConfig = {
-  float = true, -- use float window or not
+  float = false, -- use float window or not
   width = 0.8,
   height = 0.8,
   zindex = 50,
   relative = true,
+  adaptiveColumns = true, -- default to truncated adaptive display
 }
 
 ---@class KeymapConfig
 ---@field quit string
 ---@field next_table string
 ---@field prev_table string
+---@field toggle_adaptive string
+---@field expand_cell string
 ---@field save string
 local KeymapConfig = {
   quit = "q",
-  next_table = "<C-l>",
-  prev_table = "<C-h>",
+  next_table = "<C-n>",
+  prev_table = "<C-p>",
+  toggle_adaptive = "<C-t>",
+  expand_cell = "<C-e>",
   save = "<C-s>",
 }
 
@@ -26,15 +32,18 @@ local KeymapConfig = {
 ---@field columnColorEnable boolean
 ---@field maxLineEachTable number
 ---@field columnColorRoulette string[]
----@field autoDisplayWhenOpenFile boolean
----@field skipSqlite boolean
+---@field autoDisplayDsv boolean
+---@field autoDisplaySqlite boolean
 ---@field view ViewConfig
 local DefaultConfig = {
-  autoDisplayWhenOpenFile = false,
-  skipSqlite = false,
+  autoDisplayDsv = true,
+  autoDisplaySqlite = true,
+  showSqlSequenceTable = false,
   maxLineEachTable = 100,
   columnColorEnable = true,
-  columnColorRoulette = { "DataViewerColumn0", "DataViewerColumn1", "DataViewerColumn2" },
+  columnColorRoulette = { "DataViewerColumn1", "DataViewerColumn2", "DataViewerColumn3" },
+  delimiterHighlight = "DataViewerDelimiter",
+  focusTableHighlight = "DataViewerFocusTable",
   view = ViewConfig,
   keymap = KeymapConfig,
 }

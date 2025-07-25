@@ -54,7 +54,7 @@ The table view is now editable! You can:
 
 ## Installation
 
-### Lazy:
+### Lazy
 
 ```lua
 require("lazy").setup({
@@ -69,7 +69,7 @@ require("lazy").setup({
 })
 ```
 
-### Paq:
+### Paq
 
 ```lua
 require('data-viewer').setup()
@@ -77,29 +77,36 @@ require('data-viewer').setup()
 
 ## Config
 
-### Default config:
+### Default config
 
 ```lua
 local config = {
-  autoDisplayWhenOpenFile = false,
+  autoDisplayDsv = true, -- Automatically display DSV files (csv, tsv, ssv)
+  autoDisplaySqlite = true, -- Automatically display SQLite files
+  showSqlSequenceTable = false, -- Show sqlite_sequence table in SQLite viewer
   maxLineEachTable = 100,
   columnColorEnable = true,
-  columnColorRoulette = { -- Highlight groups
-    "DataViewerColumn0",
+  columnColorRoulette = { -- Highlight groups for alternating columns
     "DataViewerColumn1",
     "DataViewerColumn2",
+    "DataViewerColumn3",
   },
+  delimiterHighlight = "DataViewerDelimiter", -- Highlight group for borders and delimiters
+  focusTableHighlight = "DataViewerFocusTable", -- Highlight group for active table name
   view = {
-    float = true, -- False will open in current window
+    float = false, -- True will open in a floating window
     width = 0.8, -- Less than 1 means ratio to screen width, valid when float = true
     height = 0.8, -- Less than 1 means ratio to screen height, valid when float = true
     zindex = 50, -- Valid when float = true
     relative = true, -- If to open the window relative to the current buffer, valid when float = true
+    adaptiveColumns = true, -- Automatically adjust column widths to fit window
   },
   keymap = {
     quit = "q",
-    next_table = "<C-l>",
-    prev_table = "<C-h>",
+    next_table = "<C-n>",
+    prev_table = "<C-p>",
+    toggle_adaptive = "<C-t>",
+    expand_cell = "<C-e>",
     save = "<C-s>",
   },
 }
@@ -107,13 +114,38 @@ local config = {
 
 ### Highlight Groups
 
-You can use your own highlights for columns by change config
+The plugin uses theme-compatible highlight groups by default. You can customize the colors by configuring these options:
 
-- DataViewerColumn0
-- DataViewerColumn1
-- DataViewerColumn2
+#### Column Colors
 
-- DataViewerFocusTable
+- `columnColorRoulette`: Array of highlight groups that cycle through columns
+- `delimiterHighlight`: Highlight group for table borders and column separators
+- `focusTableHighlight`: Highlight group for the active table name
+
+#### Example: Custom Color Configuration
+
+```lua
+require('data-viewer').setup({
+  columnColorEnable = true,
+  columnColorRoulette = {
+    "DataViewerColumn1",  -- Links to String (usually green/yellow)
+    "DataViewerColumn2",  -- Links to Constant (usually orange/red)
+    "DataViewerColumn3",  -- Links to Function (usually blue/purple)
+  },
+  delimiterHighlight = "DataViewerDelimiter", -- Non-italic Comment color
+  focusTableHighlight = "DataViewerFocusTable", -- Active table name color -- Links to Title
+})
+```
+
+#### Available Highlight Groups
+
+- **DataViewerColumn1**: Column highlighting (links to `String` by default)
+- **DataViewerColumn2**: Column highlighting (links to `Constant` by default)
+- **DataViewerColumn3**: Column highlighting (links to `Function` by default)
+- **DataViewerDelimiter**: Border/delimiter color (non-italic `Comment` color)
+- **DataViewerFocusTable**: Active table name highlighting (links to `Title` by default)
+
+All highlight groups are automatically created during setup and can be customized by users.
 
 ## TODO
 

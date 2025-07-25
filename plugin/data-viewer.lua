@@ -3,6 +3,8 @@ vim.api.nvim_create_user_command("DataViewerNextTable", require("data-viewer").n
 vim.api.nvim_create_user_command("DataViewerPrevTable", require("data-viewer").prev_table, {})
 vim.api.nvim_create_user_command("DataViewerClose", require("data-viewer").close_tables, {})
 vim.api.nvim_create_user_command("DataViewerSave", require("data-viewer").save, {})
+vim.api.nvim_create_user_command("DataViewerToggleAdaptive", require("data-viewer").toggle_adaptive, {})
+vim.api.nvim_create_user_command("DataViewerExpandCell", require("data-viewer").expand_cell, {})
 
 vim.api.nvim_set_hl(0, "DataViewerColumn0", { fg = "#bb0000" })
 vim.api.nvim_set_hl(0, "DataViewerColumn1", { fg = "#00bb00" })

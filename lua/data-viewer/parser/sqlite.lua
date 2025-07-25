@@ -6,7 +6,9 @@ local get_all_table_names = function(db)
   local db_table_names = {}
   for _, db_table in ipairs(query) do
     if db_table and db_table["name"] then
-      table.insert(db_table_names, db_table["name"])
+      if config.config.showSqlSequenceTable or db_table["name"] ~= "sqlite_sequence" then
+        table.insert(db_table_names, db_table["name"])
+      end
     end
   end
   return db_table_names
@@ -33,7 +35,7 @@ local parse = function(filepath)
     return "SQL dependency not installed"
   end
 
-  if type(filepath) == 'number' then
+  if type(filepath) == "number" then
     filepath = vim.api.nvim_buf_get_name(filepath)
   end
 

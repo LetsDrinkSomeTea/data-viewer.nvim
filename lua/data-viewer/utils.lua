@@ -82,4 +82,40 @@ M.check_win_valid = function(win_id)
   end
 end
 
+---@param str string
+---@param maxWidth number
+---@return string
+M.truncateString = function(str, maxWidth)
+  if maxWidth <= 0 then
+    return ""
+  end
+
+  if plenaryStrings.strdisplaywidth(str) <= maxWidth then
+    return str
+  end
+
+  if maxWidth == 1 then
+    return "…"
+  end
+
+  -- Binary search to find the correct truncation point
+  local left, right = 1, #str
+  local bestEnd = 1
+
+  while left <= right do
+    local mid = math.floor((left + right) / 2)
+    local substr = string.sub(str, 1, mid)
+    local width = plenaryStrings.strdisplaywidth(substr)
+
+    if width <= maxWidth - 3 then -- Leave space for ellipsis
+      bestEnd = mid
+      left = mid + 1
+    else
+      right = mid - 1
+    end
+  end
+
+  return string.sub(str, 1, bestEnd) .. "..."
+end
+
 return M
