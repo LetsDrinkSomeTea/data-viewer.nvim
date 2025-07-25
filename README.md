@@ -43,7 +43,7 @@ Lightweight neovim plugin provides a table view for inspect data files such as `
 
 ## Installation
 
-### Lazy:
+### Lazy
 
 ```lua
 require("lazy").setup({
@@ -58,7 +58,7 @@ require("lazy").setup({
 })
 ```
 
-### Paq:
+### Paq
 
 ```lua
 require('data-viewer').setup()
@@ -66,7 +66,7 @@ require('data-viewer').setup()
 
 ## Config
 
-### Default config:
+### Default config
 
 ```lua
 local config = {
@@ -75,13 +75,13 @@ local config = {
   columnColorEnable = true,
   columnColorRoulette = { -- Highlight groups for alternating columns
     "DataViewerColumn1",
-    "DataViewerColumn2", 
+    "DataViewerColumn2",
     "DataViewerColumn3",
   },
   delimiterHighlight = "DataViewerDelimiter", -- Highlight group for borders and delimiters
   focusTableHighlight = "DataViewerFocusTable", -- Highlight group for active table name
   view = {
-    float = true, -- False will open in current window
+    float = false, -- True will open in a floating window
     width = 0.8, -- Less than 1 means ratio to screen width, valid when float = true
     height = 0.8, -- Less than 1 means ratio to screen height, valid when float = true
     zindex = 50, -- Valid when float = true
@@ -90,8 +90,8 @@ local config = {
   },
   keymap = {
     quit = "q",
-    next_table = "<C-l>",
-    prev_table = "<C-h>",
+    next_table = "<C-n>",
+    prev_table = "<C-p>",
     toggle_adaptive = "<C-t>",
     expand_cell = "<C-e>",
   },
@@ -103,6 +103,7 @@ local config = {
 The plugin uses theme-compatible highlight groups by default. You can customize the colors by configuring these options:
 
 #### Column Colors
+
 - `columnColorRoulette`: Array of highlight groups that cycle through columns
 - `delimiterHighlight`: Highlight group for table borders and column separators
 - `focusTableHighlight`: Highlight group for the active table name
@@ -114,15 +115,16 @@ require('data-viewer').setup({
   columnColorEnable = true,
   columnColorRoulette = {
     "DataViewerColumn1",  -- Links to String (usually green/yellow)
-    "DataViewerColumn2",  -- Links to Constant (usually orange/red)  
+    "DataViewerColumn2",  -- Links to Constant (usually orange/red)
     "DataViewerColumn3",  -- Links to Function (usually blue/purple)
   },
   delimiterHighlight = "DataViewerDelimiter", -- Non-italic Comment color
-  focusTableHighlight = "DataViewerFocusTable", -- Active table name color
+  focusTableHighlight = "DataViewerFocusTable", -- Active table name color -- Links to Title
 })
 ```
 
 #### Available Highlight Groups
+
 - **DataViewerColumn1**: Column highlighting (links to `String` by default)
 - **DataViewerColumn2**: Column highlighting (links to `Constant` by default)
 - **DataViewerColumn3**: Column highlighting (links to `Function` by default)
