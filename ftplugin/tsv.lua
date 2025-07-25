@@ -1,1 +1,1 @@
-require("data-viewer.ftcommon")
+require('data-viewer.ftcommon')

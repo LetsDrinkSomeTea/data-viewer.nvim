@@ -1,6 +1,6 @@
-local parsers = require("data-viewer.parser.parsers")
-local utils = require("data-viewer.utils")
-local config = require("data-viewer.config")
+local parsers = require('data-viewer.parser.parsers')
+local utils = require('data-viewer.utils')
+local config = require('data-viewer.config')
 
 local KEYMAP_OPTS = { noremap = true, silent = true }
 
@@ -15,7 +15,7 @@ M.is_support_filetype = function(filetype)
       return filetype
     end
   end
-  return "unsupport"
+  return 'unsupport'
 end
 
 ---@param header string[]
@@ -29,7 +29,8 @@ M.get_max_width = function(header, lines)
 
   for _, line in ipairs(lines) do
     for _, colName in ipairs(header) do
-      colMaxWidth[colName] = math.max(utils.getStringDisplayLength(line[colName]), colMaxWidth[colName])
+      colMaxWidth[colName] =
+        math.max(utils.getStringDisplayLength(line[colName]), colMaxWidth[colName])
     end
   end
 
@@ -88,7 +89,7 @@ end
 ---@param colMaxWidth table<string, number>
 ---@return string[]
 M.format_header = function(header, colMaxWidth)
-  local formatedHeader = ""
+  local formatedHeader = ''
   for _, colName in ipairs(header) do
     local maxWidth = colMaxWidth[colName]
     local truncatedColName = colName
@@ -97,14 +98,19 @@ M.format_header = function(header, colMaxWidth)
     truncatedColName = utils.truncateString(colName, maxWidth)
 
     local spaceNum = maxWidth - utils.getStringDisplayLength(truncatedColName)
-    local spaceStr = string.rep(" ", math.floor(spaceNum / 2))
-    formatedHeader = formatedHeader .. "|" .. spaceStr .. truncatedColName .. spaceStr .. string.rep(" ", spaceNum % 2)
+    local spaceStr = string.rep(' ', math.floor(spaceNum / 2))
+    formatedHeader = formatedHeader
+      .. '|'
+      .. spaceStr
+      .. truncatedColName
+      .. spaceStr
+      .. string.rep(' ', spaceNum % 2)
   end
-  formatedHeader = formatedHeader .. "|"
+  formatedHeader = formatedHeader .. '|'
 
-  local tableBorder = string.rep("─", utils.getStringDisplayLength(formatedHeader) - 2)
-  local firstLine = "┌" .. tableBorder .. "┐"
-  local lastLine = "├" .. tableBorder .. "┤"
+  local tableBorder = string.rep('─', utils.getStringDisplayLength(formatedHeader) - 2)
+  local firstLine = '┌' .. tableBorder .. '┐'
+  local lastLine = '├' .. tableBorder .. '┤'
   return { firstLine, formatedHeader, lastLine }
 end
 
@@ -115,9 +121,9 @@ end
 M.format_body = function(bodyLines, header, colMaxWidth)
   local formatedLines = {}
   for _, line in ipairs(bodyLines) do
-    local formatedLine = ""
+    local formatedLine = ''
     for _, colName in ipairs(header) do
-      local cellContent = line[colName] or ""
+      local cellContent = line[colName] or ''
       local maxWidth = colMaxWidth[colName]
       local truncatedContent = cellContent
 
@@ -125,14 +131,17 @@ M.format_body = function(bodyLines, header, colMaxWidth)
       truncatedContent = utils.truncateString(cellContent, maxWidth)
 
       local spaceNum = maxWidth - utils.getStringDisplayLength(truncatedContent)
-      local spaceStr = string.rep(" ", spaceNum)
-      formatedLine = formatedLine .. "|" .. truncatedContent .. spaceStr
+      local spaceStr = string.rep(' ', spaceNum)
+      formatedLine = formatedLine .. '|' .. truncatedContent .. spaceStr
     end
-    formatedLine = formatedLine .. "|"
+    formatedLine = formatedLine .. '|'
     table.insert(formatedLines, formatedLine)
   end
 
-  table.insert(formatedLines, "└" .. string.rep("─", utils.getStringDisplayLength(formatedLines[1]) - 2) .. "┘")
+  table.insert(
+    formatedLines,
+    '└' .. string.rep('─', utils.getStringDisplayLength(formatedLines[1]) - 2) .. '┘'
+  )
   return formatedLines
 end
 
@@ -149,11 +158,11 @@ end
 ---@return string, table<string, string | number>[]
 M.get_win_header_str = function(tablesData)
   local pos = {}
-  local header = "|"
+  local header = '|'
   local index = 1
   for tableName, _ in pairs(tablesData) do
     table.insert(pos, { name = tableName, startPos = #header + 1 })
-    header = header .. " " .. tableName .. " |"
+    header = header .. ' ' .. tableName .. ' |'
     index = index + 1
   end
   return header, pos
@@ -166,20 +175,44 @@ M.create_bufs = function(tablesData)
   for tableName, tableData in pairs(tablesData) do
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, tableData.formatedLines)
-    vim.api.nvim_buf_set_option(buf, "modifiable", false)
-    vim.api.nvim_buf_set_name(buf, "DataViwer-" .. tableName)
-    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.next_table, ":DataViewerNextTable<CR>", KEYMAP_OPTS)
-    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.prev_table, ":DataViewerPrevTable<CR>", KEYMAP_OPTS)
-    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.quit, ":DataViewerClose<CR>", KEYMAP_OPTS)
+    vim.api.nvim_buf_set_option(buf, 'modifiable', false)
+    vim.api.nvim_buf_set_name(buf, 'DataViwer-' .. tableName)
     vim.api.nvim_buf_set_keymap(
       buf,
-      "n",
-      config.config.keymap.toggle_adaptive,
-      ":DataViewerToggleAdaptive<CR>",
+      'n',
+      config.config.keymap.next_table,
+      ':DataViewerNextTable<CR>',
       KEYMAP_OPTS
     )
-    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.expand_cell, ":DataViewerExpandCell<CR>", KEYMAP_OPTS)
-    tablesData[tableName]["bufnum"] = buf
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.prev_table,
+      ':DataViewerPrevTable<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.quit,
+      ':DataViewerClose<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.toggle_adaptive,
+      ':DataViewerToggleAdaptive<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.expand_cell,
+      ':DataViewerExpandCell<CR>',
+      KEYMAP_OPTS
+    )
+    tablesData[tableName]['bufnum'] = buf
     if first_bufnum == -1 then
       first_bufnum = buf
     end
@@ -193,28 +226,52 @@ M.create_bufs_empty = function(tablesData)
   local first_bufnum = -1
   for tableName, tableData in pairs(tablesData) do
     local buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_option(buf, "modifiable", false)
+    vim.api.nvim_buf_set_option(buf, 'modifiable', false)
 
     -- Check if buffer with this name exists and delete it
-    local buf_name = "DataViwer-" .. tableName
+    local buf_name = 'DataViwer-' .. tableName
     local existing_buf = vim.fn.bufnr(buf_name)
     if existing_buf ~= -1 then
       vim.api.nvim_buf_delete(existing_buf, { force = true })
     end
 
     vim.api.nvim_buf_set_name(buf, buf_name)
-    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.next_table, ":DataViewerNextTable<CR>", KEYMAP_OPTS)
-    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.prev_table, ":DataViewerPrevTable<CR>", KEYMAP_OPTS)
-    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.quit, ":DataViewerClose<CR>", KEYMAP_OPTS)
     vim.api.nvim_buf_set_keymap(
       buf,
-      "n",
-      config.config.keymap.toggle_adaptive,
-      ":DataViewerToggleAdaptive<CR>",
+      'n',
+      config.config.keymap.next_table,
+      ':DataViewerNextTable<CR>',
       KEYMAP_OPTS
     )
-    vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.expand_cell, ":DataViewerExpandCell<CR>", KEYMAP_OPTS)
-    tablesData[tableName]["bufnum"] = buf
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.prev_table,
+      ':DataViewerPrevTable<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.quit,
+      ':DataViewerClose<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.toggle_adaptive,
+      ':DataViewerToggleAdaptive<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.expand_cell,
+      ':DataViewerExpandCell<CR>',
+      KEYMAP_OPTS
+    )
+    tablesData[tableName]['bufnum'] = buf
     if first_bufnum == -1 then
       first_bufnum = buf
     end
@@ -231,7 +288,7 @@ M.open_win = function(opts)
 
   if not config.config.view.float or force_replace then
     local win = vim.api.nvim_get_current_win()
-    vim.api.nvim_buf_set_option(buf_id, "buflisted", true)
+    vim.api.nvim_buf_set_option(buf_id, 'buflisted', true)
     vim.api.nvim_set_current_buf(buf_id)
     return win
   end
@@ -241,22 +298,22 @@ M.open_win = function(opts)
   local height = math.max(1, math.floor(screenHeight * config.config.view.height))
   local width = math.max(1, math.floor(screenWidth * config.config.view.width))
   local win = vim.api.nvim_open_win(buf_id, true, {
-    relative = config.config.view.relative and "win" or "editor",
+    relative = config.config.view.relative and 'win' or 'editor',
     width = width,
     height = height,
     row = math.max(1, math.floor((screenHeight - height) / 2)),
     col = math.max(1, math.floor((screenWidth - width) / 2)),
-    style = "minimal",
+    style = 'minimal',
     zindex = config.config.view.zindex,
-    title = "Data Viewer",
-    title_pos = "center",
-    border = "single",
+    title = 'Data Viewer',
+    title_pos = 'center',
+    border = 'single',
   })
 
   -- Set the window options
-  vim.api.nvim_win_set_option(win, "wrap", not config.config.view.adaptiveColumns)
-  vim.api.nvim_win_set_option(win, "number", false)
-  vim.api.nvim_win_set_option(win, "cursorline", false)
+  vim.api.nvim_win_set_option(win, 'wrap', not config.config.view.adaptiveColumns)
+  vim.api.nvim_win_set_option(win, 'number', false)
+  vim.api.nvim_win_set_option(win, 'cursorline', false)
   return win
 end
 
@@ -265,20 +322,29 @@ end
 ---@param colMaxWidth table<string, number>
 M.highlight_header = function(bufnum, headers, colMaxWidth)
   local headerLine = vim.api.nvim_buf_get_lines(bufnum, 2, 3, false)[1]
-  if not headerLine then return end
-  
+  if not headerLine then
+    return
+  end
+
   local curBytePos = 0 -- Start from beginning of line (0-indexed for highlight API)
-  
+
   for j, colName in ipairs(headers) do
     -- Highlight delimiter (1 byte)
-    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 2, curBytePos, curBytePos + 1)
+    vim.api.nvim_buf_add_highlight(
+      bufnum,
+      0,
+      config.config.delimiterHighlight,
+      2,
+      curBytePos,
+      curBytePos + 1
+    )
     curBytePos = curBytePos + 1 -- Move past delimiter
-    
+
     -- Extract substring with exact display width and get its byte length
     local targetDisplayWidth = colMaxWidth[colName]
     local extractedContent = vim.fn.strpart(headerLine, curBytePos, targetDisplayWidth, true) -- true = count by display width
     local contentByteLength = #extractedContent
-    
+
     -- Highlight column content using byte positions
     vim.api.nvim_buf_add_highlight(
       bufnum,
@@ -288,12 +354,19 @@ M.highlight_header = function(bufnum, headers, colMaxWidth)
       curBytePos,
       curBytePos + contentByteLength
     )
-    
+
     curBytePos = curBytePos + contentByteLength -- Move to start of next column
   end
 
   -- Highlight final delimiter
-  vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 2, curBytePos, curBytePos + 1)
+  vim.api.nvim_buf_add_highlight(
+    bufnum,
+    0,
+    config.config.delimiterHighlight,
+    2,
+    curBytePos,
+    curBytePos + 1
+  )
 end
 
 ---@param bufnum number
@@ -304,20 +377,29 @@ M.highlight_rows = function(bufnum, headers, bodyLines, colMaxWidth)
   for i = 1, #bodyLines do
     local lineNum = i + 3 -- Body starts at line 4 (0-indexed: line 3)
     local line = vim.api.nvim_buf_get_lines(bufnum, lineNum, lineNum + 1, false)[1]
-    if not line then goto continue end
-    
+    if not line then
+      goto continue
+    end
+
     local curBytePos = 0 -- Start from beginning of line (0-indexed for highlight API)
-    
+
     for j, colName in ipairs(headers) do
       -- Highlight delimiter (1 byte)
-      vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, lineNum, curBytePos, curBytePos + 1)
+      vim.api.nvim_buf_add_highlight(
+        bufnum,
+        0,
+        config.config.delimiterHighlight,
+        lineNum,
+        curBytePos,
+        curBytePos + 1
+      )
       curBytePos = curBytePos + 1 -- Move past delimiter
-      
+
       -- Extract substring with exact display width and get its byte length
       local targetDisplayWidth = colMaxWidth[colName]
       local extractedContent = vim.fn.strpart(line, curBytePos, targetDisplayWidth, true) -- true = count by display width
       local contentByteLength = #extractedContent
-      
+
       -- Highlight column content using byte positions
       vim.api.nvim_buf_add_highlight(
         bufnum,
@@ -327,13 +409,20 @@ M.highlight_rows = function(bufnum, headers, bodyLines, colMaxWidth)
         curBytePos,
         curBytePos + contentByteLength
       )
-      
+
       curBytePos = curBytePos + contentByteLength -- Move to start of next column
     end
 
     -- Highlight final delimiter
-    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, lineNum, curBytePos, curBytePos + 1)
-    
+    vim.api.nvim_buf_add_highlight(
+      bufnum,
+      0,
+      config.config.delimiterHighlight,
+      lineNum,
+      curBytePos,
+      curBytePos + 1
+    )
+
     ::continue::
   end
 end
@@ -371,16 +460,27 @@ M.highlight_border_lines = function(bufnum)
   -- Highlight the bottom table border line (last line)
   local last_line = vim.api.nvim_buf_get_lines(bufnum, line_count - 1, line_count, false)[1]
   if
-    last_line and (last_line:match("^[└┴┘─]+$") or last_line:match("^[┌┬┐─├┼┤└┴┘│]+$"))
+    last_line
+    and (
+      last_line:match('^[└┴┘─]+$')
+      or last_line:match('^[┌┬┐─├┼┤└┴┘│]+$')
+    )
   then
-    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, line_count - 1, 0, #last_line)
+    vim.api.nvim_buf_add_highlight(
+      bufnum,
+      0,
+      config.config.delimiterHighlight,
+      line_count - 1,
+      0,
+      #last_line
+    )
   end
 end
 
 ---@param args string
 ---@return string | number | nil, string | nil
 M.get_file_source_from_args = function(args)
-  local args_array = utils.split_string(args, " ")
+  local args_array = utils.split_string(args, ' ')
   if #args_array > 2 then
     return nil, nil
   elseif #args_array == 2 then
@@ -393,7 +493,7 @@ M.get_file_source_from_args = function(args)
     return filepath, ft
   else
     local filepath = vim.api.nvim_get_current_buf()
-    local ft = vim.api.nvim_buf_get_option(filepath, "filetype")
+    local ft = vim.api.nvim_buf_get_option(filepath, 'filetype')
     return filepath, ft
   end
 end
@@ -403,8 +503,8 @@ end
 ---@param new_buf number
 M.switch_buffer = function(win_id, old_buf, new_buf)
   if not config.config.view.float then
-    vim.api.nvim_buf_set_option(old_buf, "buflisted", false)
-    vim.api.nvim_buf_set_option(new_buf, "buflisted", true)
+    vim.api.nvim_buf_set_option(old_buf, 'buflisted', false)
+    vim.api.nvim_buf_set_option(new_buf, 'buflisted', true)
   end
   vim.api.nvim_win_set_buf(win_id, new_buf)
 end
@@ -417,23 +517,26 @@ M.get_effective_width = function(win_id)
 
   -- Account for line numbers
   local numberWidth = 0
-  if vim.api.nvim_win_get_option(win_id, "number") or vim.api.nvim_win_get_option(win_id, "relativenumber") then
+  if
+    vim.api.nvim_win_get_option(win_id, 'number')
+    or vim.api.nvim_win_get_option(win_id, 'relativenumber')
+  then
     local lineCount = vim.api.nvim_buf_line_count(buf)
     numberWidth = math.max(2, string.len(tostring(lineCount))) + 1 -- +1 for space
   end
 
   -- Account for sign column
   local signWidth = 0
-  local signcolumn = vim.api.nvim_win_get_option(win_id, "signcolumn")
-  if signcolumn == "yes" then
+  local signcolumn = vim.api.nvim_win_get_option(win_id, 'signcolumn')
+  if signcolumn == 'yes' then
     signWidth = 2
-  elseif signcolumn == "auto" then
+  elseif signcolumn == 'auto' then
     -- This is harder to calculate precisely, assume 0 for now
     signWidth = 0
   end
 
   -- Account for fold column
-  local foldWidth = vim.api.nvim_win_get_option(win_id, "foldcolumn")
+  local foldWidth = vim.api.nvim_win_get_option(win_id, 'foldcolumn')
 
   return winWidth - numberWidth - signWidth - foldWidth
 end
@@ -448,7 +551,7 @@ M.get_column_at_position = function(line, col, headers)
   local pos = 0
 
   while true do
-    pos = line:find("|", pos + 1)
+    pos = line:find('|', pos + 1)
     if not pos then
       break
     end
@@ -489,46 +592,46 @@ M.show_cell_popup = function(content, columnName)
     table.insert(lines, content)
   else
     -- Word wrap long content
-    local words = vim.split(content, " ")
-    local currentLine = ""
+    local words = vim.split(content, ' ')
+    local currentLine = ''
 
     for _, word in ipairs(words) do
       if #currentLine + #word + 1 <= width then
-        currentLine = currentLine == "" and word or currentLine .. " " .. word
+        currentLine = currentLine == '' and word or currentLine .. ' ' .. word
       else
-        if currentLine ~= "" then
+        if currentLine ~= '' then
           table.insert(lines, currentLine)
         end
         currentLine = word
       end
     end
 
-    if currentLine ~= "" then
+    if currentLine ~= '' then
       table.insert(lines, currentLine)
     end
   end
 
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.api.nvim_buf_set_option(buf, "modifiable", false)
+  vim.api.nvim_buf_set_option(buf, 'modifiable', false)
 
   -- Calculate popup size
   local height = math.min(#lines + 2, 10)
 
   -- Create floating window
   local win = vim.api.nvim_open_win(buf, false, {
-    relative = "cursor",
+    relative = 'cursor',
     width = width,
     height = height,
     row = 1,
     col = 0,
-    style = "minimal",
-    border = "rounded",
+    style = 'minimal',
+    border = 'rounded',
     title = columnName,
-    title_pos = "center",
+    title_pos = 'center',
   })
 
   -- Close on cursor move
-  vim.api.nvim_create_autocmd("CursorMoved", {
+  vim.api.nvim_create_autocmd('CursorMoved', {
     callback = function()
       if vim.api.nvim_win_is_valid(win) then
         vim.api.nvim_win_close(win, true)

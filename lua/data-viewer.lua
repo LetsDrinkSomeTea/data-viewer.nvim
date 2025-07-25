@@ -1,7 +1,7 @@
-local module = require("data-viewer.module")
-local parsers = require("data-viewer.parser.parsers")
-local config = require("data-viewer.config")
-local utils = require("data-viewer.utils")
+local module = require('data-viewer.module')
+local parsers = require('data-viewer.parser.parsers')
+local config = require('data-viewer.config')
+local utils = require('data-viewer.utils')
 
 ---@class StartOptions
 ---@field silent? boolean
@@ -9,7 +9,7 @@ local utils = require("data-viewer.utils")
 ---@field force_replace? boolean
 local StartOptions = {
   silent = false,
-  args = "",
+  args = '',
 }
 
 ---@class DataViewer
@@ -27,43 +27,43 @@ M.setup = function(args)
   config.setup(args) -- setup config
 
   -- Define custom highlight group for delimiters (non-italic)
-  vim.api.nvim_set_hl(0, "DataViewerDelimiter", {
-    fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID("Comment")), "fg"),
+  vim.api.nvim_set_hl(0, 'DataViewerDelimiter', {
+    fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID('Comment')), 'fg'),
     italic = false,
   })
 
   -- Define custom highlight group for focus table (defaults to Title)
-  vim.api.nvim_set_hl(0, "DataViewerFocusTable", { link = "Title" })
+  vim.api.nvim_set_hl(0, 'DataViewerFocusTable', { link = 'Title' })
 
   -- Define custom column highlight groups
-  vim.api.nvim_set_hl(0, "DataViewerColumn1", { link = "String" })
-  vim.api.nvim_set_hl(0, "DataViewerColumn2", { link = "Constant" })
-  vim.api.nvim_set_hl(0, "DataViewerColumn3", { link = "Function" })
+  vim.api.nvim_set_hl(0, 'DataViewerColumn1', { link = 'String' })
+  vim.api.nvim_set_hl(0, 'DataViewerColumn2', { link = 'Constant' })
+  vim.api.nvim_set_hl(0, 'DataViewerColumn3', { link = 'Function' })
 end
 
 ---@param opts? StartOptions
 M.start = function(opts)
   if opts == nil or opts.args == nil then
-    vim.print("Invalid Source")
+    vim.print('Invalid Source')
     return
   end
 
   local filepath, ft = module.get_file_source_from_args(opts.args)
   if filepath == nil or ft == nil then
-    vim.print("Usage: DataViewer [filetype] or DataViewer [filepath] [filetype]")
+    vim.print('Usage: DataViewer [filetype] or DataViewer [filepath] [filetype]')
     return
   end
 
   ft = module.is_support_filetype(ft)
-  if ft == "unsupport" then
+  if ft == 'unsupport' then
     if not opts.silent then
-      vim.print("Filetype unsupported")
+      vim.print('Filetype unsupported')
     end
     return
   end
 
   local parsedData = parsers[ft](filepath)
-  if type(parsedData) == "string" then
+  if type(parsedData) == 'string' then
     vim.print(parsedData)
     return
   end
@@ -73,7 +73,8 @@ M.start = function(opts)
 
   -- Store original column widths for full-width mode
   for tableName, tableData in pairs(parsedData) do
-    parsedData[tableName]["colMaxWidth"] = module.get_max_width(tableData.headers, tableData.bodyLines)
+    parsedData[tableName]['colMaxWidth'] =
+      module.get_max_width(tableData.headers, tableData.bodyLines)
   end
 
   local first_bufnum = -1
@@ -92,15 +93,17 @@ M.start = function(opts)
       colWidthToUse = tableData.colMaxWidth
     end
 
-    local formatedLines =
-      utils.merge_array({ headerStr }, module.format_lines(tableData.headers, tableData.bodyLines, colWidthToUse))
+    local formatedLines = utils.merge_array(
+      { headerStr },
+      module.format_lines(tableData.headers, tableData.bodyLines, colWidthToUse)
+    )
 
-    vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", true)
+    vim.api.nvim_buf_set_option(tableData.bufnum, 'modifiable', true)
     vim.api.nvim_buf_set_lines(tableData.bufnum, 0, -1, false, formatedLines)
-    vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", false)
+    vim.api.nvim_buf_set_option(tableData.bufnum, 'modifiable', false)
 
     -- Store the current column widths for highlighting
-    parsedData[tableName]["currentColWidth"] = colWidthToUse
+    parsedData[tableName]['currentColWidth'] = colWidthToUse
   end
 
   M.parsed_data = parsedData
@@ -115,7 +118,12 @@ M.start = function(opts)
     for _, tableData in pairs(parsedData) do
       module.highlight_border_lines(tableData.bufnum)
       module.highlight_header(tableData.bufnum, tableData.headers, tableData.currentColWidth)
-      module.highlight_rows(tableData.bufnum, tableData.headers, tableData.bodyLines, tableData.currentColWidth)
+      module.highlight_rows(
+        tableData.bufnum,
+        tableData.headers,
+        tableData.bodyLines,
+        tableData.currentColWidth
+      )
     end
   end
 
@@ -128,10 +136,19 @@ M.setup_auto_format = function()
     vim.api.nvim_del_augroup_by_id(M.autocmd_group)
   end
 
-  M.autocmd_group = vim.api.nvim_create_augroup("DataViewerAutoFormat", { clear = true })
+  M.autocmd_group = vim.api.nvim_create_augroup('DataViewerAutoFormat', { clear = true })
 
   vim.api.nvim_create_autocmd(
-    { "VimResized", "WinScrolled", "BufEnter", "BufLeave", "BufWinEnter", "BufWinLeave", "FocusGained", "FocusLost" },
+    {
+      'VimResized',
+      'WinScrolled',
+      'BufEnter',
+      'BufLeave',
+      'BufWinEnter',
+      'BufWinLeave',
+      'FocusGained',
+      'FocusLost',
+    },
     {
       group = M.autocmd_group,
       callback = function()
@@ -221,16 +238,18 @@ M.refresh_current_table = function()
     end
 
     -- Store updated column widths
-    M.parsed_data[tableName]["currentColWidth"] = colMaxWidth
+    M.parsed_data[tableName]['currentColWidth'] = colMaxWidth
 
     -- Reformat lines
-    local formatedLines =
-      utils.merge_array({ headerStr }, module.format_lines(tableData.headers, tableData.bodyLines, colMaxWidth))
+    local formatedLines = utils.merge_array(
+      { headerStr },
+      module.format_lines(tableData.headers, tableData.bodyLines, colMaxWidth)
+    )
 
     -- Update buffer content
-    vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", true)
+    vim.api.nvim_buf_set_option(tableData.bufnum, 'modifiable', true)
     vim.api.nvim_buf_set_lines(tableData.bufnum, 0, -1, false, formatedLines)
-    vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", false)
+    vim.api.nvim_buf_set_option(tableData.bufnum, 'modifiable', false)
 
     -- Refresh highlighting
     if config.config.columnColorEnable then
@@ -253,7 +272,7 @@ M.refresh_current_table = function()
   end
 
   -- Set window options
-  vim.api.nvim_win_set_option(M.win_id, "wrap", false)
+  vim.api.nvim_win_set_option(M.win_id, 'wrap', false)
 end
 
 M.expand_cell = function()

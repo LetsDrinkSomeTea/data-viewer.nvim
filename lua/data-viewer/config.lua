@@ -19,11 +19,11 @@ local ViewConfig = {
 ---@field toggle_adaptive string
 ---@field expand_cell string
 local KeymapConfig = {
-  quit = "q",
-  next_table = "<C-n>",
-  prev_table = "<C-p>",
-  toggle_adaptive = "<C-t>",
-  expand_cell = "<C-e>",
+  quit = 'q',
+  next_table = '<C-n>',
+  prev_table = '<C-p>',
+  toggle_adaptive = '<C-t>',
+  expand_cell = '<C-e>',
 }
 
 ---@class Config
@@ -39,9 +39,9 @@ local DefaultConfig = {
   showSqlSequenceTable = false,
   maxLineEachTable = 100,
   columnColorEnable = true,
-  columnColorRoulette = { "DataViewerColumn1", "DataViewerColumn2", "DataViewerColumn3" },
-  delimiterHighlight = "DataViewerDelimiter",
-  focusTableHighlight = "DataViewerFocusTable",
+  columnColorRoulette = { 'DataViewerColumn1', 'DataViewerColumn2', 'DataViewerColumn3' },
+  delimiterHighlight = 'DataViewerDelimiter',
+  focusTableHighlight = 'DataViewerFocusTable',
   view = ViewConfig,
   keymap = KeymapConfig,
 }
@@ -53,7 +53,7 @@ M.config = DefaultConfig
 
 ---@param args Config?
 M.setup = function(args)
-  M.config = vim.tbl_deep_extend("force", M.config, args or {})
+  M.config = vim.tbl_deep_extend('force', M.config, args or {})
 end
 
 return M

@@ -1,4 +1,4 @@
-local config = require("data-viewer.config")
+local config = require('data-viewer.config')
 
 ---@class Utils
 local M = {}
@@ -58,7 +58,7 @@ end
 ---@return string[]
 M.split_string = function(str, sep)
   local ret = {}
-  local pattern = "[^" .. sep .. "]+"
+  local pattern = '[^' .. sep .. ']+'
 
   for segment in string.gmatch(str, pattern) do
     table.insert(ret, segment)
@@ -70,11 +70,11 @@ end
 ---@return string[]
 M.read_file = function(file)
   local maxLines = config.config.maxLineEachTable
-  if type(file) == "number" then
+  if type(file) == 'number' then
     -- buf_number
     local lines = vim.api.nvim_buf_get_lines(file, 0, -1, false)
     return M.slice_array(lines, maxLines)
-  elseif type(file) == "string" then
+  elseif type(file) == 'string' then
     -- file path
     local lines = vim.fn.readfile(file)
     return M.slice_array(lines, maxLines)
@@ -98,7 +98,7 @@ end
 ---@return string
 M.truncateString = function(str, maxWidth)
   if maxWidth <= 0 then
-    return ""
+    return ''
   end
 
   if vim.fn.strdisplaywidth(str) <= maxWidth then
@@ -106,7 +106,7 @@ M.truncateString = function(str, maxWidth)
   end
 
   if maxWidth == 1 then
-    return "…"
+    return '…'
   end
 
   -- Binary search to find the correct truncation point
@@ -126,7 +126,7 @@ M.truncateString = function(str, maxWidth)
     end
   end
 
-  return string.sub(str, 1, bestEnd) .. "..."
+  return string.sub(str, 1, bestEnd) .. '...'
 end
 
 return M

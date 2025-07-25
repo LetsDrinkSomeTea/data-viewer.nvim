@@ -1,4 +1,4 @@
-local utils = require("data-viewer.utils")
+local utils = require('data-viewer.utils')
 
 ---@param line string
 ---@param delim string
@@ -6,7 +6,7 @@ local utils = require("data-viewer.utils")
 local function parseLine(line, delim)
   local words = {}
   local quoted = false
-  local currentValue = ""
+  local currentValue = ''
 
   for i = 1, #line do
     local char = line:sub(i, i) -- Get the current character
@@ -15,7 +15,7 @@ local function parseLine(line, delim)
       quoted = not quoted
     elseif char == delim and not quoted then
       table.insert(words, currentValue)
-      currentValue = ""
+      currentValue = ''
     else
       currentValue = currentValue .. char
     end

@@ -4,10 +4,10 @@
 
 ---@class Parsers
 local M = {
-  csv = require("data-viewer.parser.fsv")("csv", ","),
-  tsv = require("data-viewer.parser.fsv")("tsv", "\t"),
-  ssv = require("data-viewer.parser.fsv")("ssv", ";"),
-  sqlite = require("data-viewer.parser.sqlite"),
+  csv = require('data-viewer.parser.fsv')('csv', ','),
+  tsv = require('data-viewer.parser.fsv')('tsv', '\t'),
+  ssv = require('data-viewer.parser.fsv')('ssv', ';'),
+  sqlite = require('data-viewer.parser.sqlite'),
 }
 
 return M
