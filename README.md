@@ -70,7 +70,9 @@ require('data-viewer').setup()
 
 ```lua
 local config = {
-  autoDisplayWhenOpenFile = false,
+  autoDisplayDsv = true, -- Automatically display DSV files (csv, tsv, ssv)
+  autoDisplaySqlite = true, -- Automatically display SQLite files
+  showSqlSequenceTable = false, -- Show sqlite_sequence table in SQLite viewer
   maxLineEachTable = 100,
   columnColorEnable = true,
   columnColorRoulette = { -- Highlight groups for alternating columns

@@ -130,14 +130,17 @@ M.setup_auto_format = function()
 
   M.autocmd_group = vim.api.nvim_create_augroup("DataViewerAutoFormat", { clear = true })
 
-  vim.api.nvim_create_autocmd({ "VimResized", "WinScrolled" }, {
-    group = M.autocmd_group,
-    callback = function()
-      if utils.check_win_valid(M.win_id) then
-        M.refresh_current_table()
-      end
-    end,
-  })
+  vim.api.nvim_create_autocmd(
+    { "VimResized", "WinScrolled", "BufEnter", "BufLeave", "BufWinEnter", "BufWinLeave", "FocusGained", "FocusLost" },
+    {
+      group = M.autocmd_group,
+      callback = function()
+        if utils.check_win_valid(M.win_id) then
+          M.refresh_current_table()
+        end
+      end,
+    }
+  )
 end
 
 M.next_table = function()

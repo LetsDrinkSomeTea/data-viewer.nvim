@@ -30,12 +30,13 @@ local KeymapConfig = {
 ---@field columnColorEnable boolean
 ---@field maxLineEachTable number
 ---@field columnColorRoulette string[]
----@field autoDisplayWhenOpenFile boolean
----@field skipSqlite boolean
+---@field autoDisplayDsv boolean
+---@field autoDisplaySqlite boolean
 ---@field view ViewConfig
 local DefaultConfig = {
-  autoDisplayWhenOpenFile = false,
-  skipSqlite = false,
+  autoDisplayDsv = true,
+  autoDisplaySqlite = true,
+  showSqlSequenceTable = false,
   maxLineEachTable = 100,
   columnColorEnable = true,
   columnColorRoulette = { "DataViewerColumn1", "DataViewerColumn2", "DataViewerColumn3" },
