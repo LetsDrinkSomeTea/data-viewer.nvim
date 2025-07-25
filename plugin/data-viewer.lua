@@ -19,5 +19,8 @@ vim.filetype.add({
   extension = {
     sqlite3 = 'sqlite',
     sqlite = 'sqlite',
+    xlsx = 'xlsx',
+    xls = 'xls',
+    ods = 'ods',
   },
 })

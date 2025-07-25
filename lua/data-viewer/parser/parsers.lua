@@ -8,6 +8,9 @@ local M = {
   tsv = require('data-viewer.parser.fsv')('tsv', '\t'),
   ssv = require('data-viewer.parser.fsv')('ssv', ';'),
   sqlite = require('data-viewer.parser.sqlite'),
+  xlsx = require('data-viewer.parser.excel'),
+  xls = require('data-viewer.parser.excel'),
+  ods = require('data-viewer.parser.excel'),
 }
 
 return M

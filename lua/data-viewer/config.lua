@@ -32,10 +32,12 @@ local KeymapConfig = {
 ---@field columnColorRoulette string[]
 ---@field autoDisplayDsv boolean
 ---@field autoDisplaySqlite boolean
+---@field autoDisplayExcel boolean
 ---@field view ViewConfig
 local DefaultConfig = {
   autoDisplayDsv = true,
   autoDisplaySqlite = true,
+  autoDisplayExcel = true,
   showSqlSequenceTable = false,
   maxLineEachTable = 100,
   columnColorEnable = true,
