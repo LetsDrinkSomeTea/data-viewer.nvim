@@ -1,4 +1,3 @@
-local plenaryStrings = require("plenary.strings")
 local config = require("data-viewer.config")
 
 ---@class Utils
@@ -39,7 +38,19 @@ end
 ---@param str string
 ---@return number
 M.getStringDisplayLength = function(str)
-  return plenaryStrings.strdisplaywidth(str)
+  return vim.fn.strdisplaywidth(str)
+end
+
+---@param str string
+---@return number
+M.getStringByteLength = function(str)
+  return vim.fn.strlen(str)
+end
+
+---@param str string
+---@return table {stringDisplayLength: number, stringByteLength: number}
+M.getStringLength = function(str)
+  return { M.getStringDisplayLength(str), M.getStringByteLength(str) }
 end
 
 ---@param str string
@@ -90,7 +101,7 @@ M.truncateString = function(str, maxWidth)
     return ""
   end
 
-  if plenaryStrings.strdisplaywidth(str) <= maxWidth then
+  if vim.fn.strdisplaywidth(str) <= maxWidth then
     return str
   end
 
@@ -105,7 +116,7 @@ M.truncateString = function(str, maxWidth)
   while left <= right do
     local mid = math.floor((left + right) / 2)
     local substr = string.sub(str, 1, mid)
-    local width = plenaryStrings.strdisplaywidth(substr)
+    local width = vim.fn.strdisplaywidth(substr)
 
     if width <= maxWidth - 3 then -- Leave space for ellipsis
       bestEnd = mid

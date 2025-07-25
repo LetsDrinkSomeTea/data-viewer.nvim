@@ -25,7 +25,6 @@ Lightweight neovim plugin provides a table view for inspect data files such as `
 ## Requirements
 
 - neovim >= 0.8
-- [plenary](https://github.com/nvim-lua/plenary.nvim)
 - [sqlite.lua](https://github.com/kkharji/sqlite.lua) (Optional)
 
 ## Usage
@@ -51,7 +50,6 @@ require("lazy").setup({
     'vidocqh/data-viewer.nvim',
     opts = {},
     dependencies = {
-      "nvim-lua/plenary.nvim",
       "kkharji/sqlite.lua", -- Optional, sqlite support
     }
   },
