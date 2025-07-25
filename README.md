@@ -22,11 +22,17 @@ Lightweight neovim plugin provides a table view for inspect data files such as `
 - tsv (tab seperated)
 - ssv (semicolon seperated)
 - sqlite
+- xlsx (Excel)
+- xls (Excel legacy)
+- ods (LibreOffice Calc)
+
+Excel files will display each sheet as a separate tab that you can navigate between using `Ctrl+N` and `Ctrl+P` (or your configured keybindings).
 
 ## Requirements
 
 - neovim >= 0.8
-- [sqlite.lua](https://github.com/kkharji/sqlite.lua) (Optional)
+- [sqlite.lua](https://github.com/kkharji/sqlite.lua) (Optional, for SQLite support)
+- [xlsx2csv](https://github.com/dilshod/xlsx2csv) (Optional, for Excel support: `pip install xlsx2csv`)
 
 ## Usage
 
@@ -74,6 +80,7 @@ require('data-viewer').setup()
 local config = {
   autoDisplayDsv = true, -- Automatically display DSV files (csv, tsv, ssv)
   autoDisplaySqlite = true, -- Automatically display SQLite files
+  autoDisplayExcel = true, -- Automatically display Excel files (xlsx, xls, ods)
   showSqlSequenceTable = false, -- Show sqlite_sequence table in SQLite viewer
   maxLineEachTable = 100,
   columnColorEnable = true,
