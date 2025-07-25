@@ -8,18 +8,19 @@ Lightweight neovim plugin provides a table view for inspect data files such as `
 
 <p align='center'>
   <b>Floating View</b>
-  <img width="1357" alt="image" src="https://github.com/VidocqH/data-viewer.nvim/assets/16725418/e4e494e5-ff8b-4a5c-9f4d-07fc1982bace">
+  <img width="2474" height="663" alt="image" src="https://github.com/user-attachments/assets/877c0c40-7091-4d15-8091-938a989602d4" />
 </p>
 
 <p align='center'>
   <b>Tab View</b>
-  <img width="1164" alt="image" src="https://github.com/VidocqH/data-viewer.nvim/assets/16725418/468ecb0a-2dd3-4dc9-ad61-6c55516fbdec">
+  <img width="2495" height="681" alt="image" src="https://github.com/user-attachments/assets/ae861567-7839-4ba4-b58b-42845e35ffb2" />
 </p>
 
 ### Supported filetypes
 
-- csv
-- tsv
+- csv (comma seperated)
+- tsv (tab seperated)
+- ssv (semicolon seperated)
 - sqlite
 
 ## Requirements
@@ -34,11 +35,14 @@ Lightweight neovim plugin provides a table view for inspect data files such as `
 - `:DataViewer` -- open with current file and auto detect filetype
 - `:DataViewer [filetype]` -- open with current file with given filetype
 - `:DataViewer [filepath] [filetype]` -- open with given file and given filetype
+- `:DataViewerClose` -- closes the viewer
 
-- `:DataViewerNextTable`
-- `:DataViewerPrevTable`
+- `:DataViewerNextTable` -- switches to the next table if multiple are present in one sqlite file
+- `:DataViewerPrevTable` -- switches to the previous
 
-- `:DataViewerClose`
+- `:DataViewerExpandCell` -- expands cell under cursor into floating window
+
+- `:DataViewerToggleAdaptive` -- toggle if the table should be fixed to the buffer size and columns should be streched/truncated or if the table should be displayed as is
 
 ## Installation
 
@@ -133,7 +137,6 @@ require('data-viewer').setup({
 
 All highlight groups are automatically created during setup and can be customized by users.
 
-## TODO
+## Improvements
 
-- More filetypes support
-- Table styles
+Feel free to open an issue or to submit a pull request.
