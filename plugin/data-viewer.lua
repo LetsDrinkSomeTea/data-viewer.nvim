@@ -24,3 +24,18 @@ vim.filetype.add({
     ods = 'ods',
   },
 })
+
+-- Override zip detection for Excel files
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'zip',
+  callback = function()
+    local filename = vim.fn.expand('%:t')
+    if filename:match('%.xlsx$') then
+      vim.bo.filetype = 'xlsx'
+    elseif filename:match('%.xls$') then
+      vim.bo.filetype = 'xls'
+    elseif filename:match('%.ods$') then
+      vim.bo.filetype = 'ods'
+    end
+  end,
+})

@@ -150,9 +150,9 @@ local parse = function(filepath)
 
   -- If no sheets were found with the delimiter method, try parsing as single sheet
   if vim.tbl_isempty(tablesData) then
-    local singleSheetData = parseSheet(output, 'Sheet1')
+    local singleSheetData = parseSheet(output, 'Sheet')
     if #singleSheetData.headers > 0 then
-      tablesData['Sheet1'] = singleSheetData
+      tablesData['Sheet'] = singleSheetData
     end
   end
 
