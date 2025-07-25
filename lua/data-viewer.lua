@@ -25,6 +25,20 @@ M.last_buffer_width = nil
 
 M.setup = function(args)
   config.setup(args) -- setup config
+
+  -- Define custom highlight group for delimiters (non-italic)
+  vim.api.nvim_set_hl(0, "DataViewerDelimiter", {
+    fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID("Comment")), "fg"),
+    italic = false,
+  })
+
+  -- Define custom highlight group for focus table (defaults to Title)
+  vim.api.nvim_set_hl(0, "DataViewerFocusTable", { link = "Title" })
+
+  -- Define custom column highlight groups
+  vim.api.nvim_set_hl(0, "DataViewerColumn1", { link = "String" })
+  vim.api.nvim_set_hl(0, "DataViewerColumn2", { link = "Constant" })
+  vim.api.nvim_set_hl(0, "DataViewerColumn3", { link = "Function" })
 end
 
 ---@param opts? StartOptions
@@ -78,10 +92,8 @@ M.start = function(opts)
       colWidthToUse = tableData.colMaxWidth
     end
 
-    local formatedLines = utils.merge_array(
-      { headerStr },
-      module.format_lines(tableData.headers, tableData.bodyLines, colWidthToUse)
-    )
+    local formatedLines =
+      utils.merge_array({ headerStr }, module.format_lines(tableData.headers, tableData.bodyLines, colWidthToUse))
 
     vim.api.nvim_buf_set_option(tableData.bufnum, "modifiable", true)
     vim.api.nvim_buf_set_lines(tableData.bufnum, 0, -1, false, formatedLines)
@@ -101,6 +113,7 @@ M.start = function(opts)
 
   if config.config.columnColorEnable then
     for _, tableData in pairs(parsedData) do
+      module.highlight_border_lines(tableData.bufnum)
       module.highlight_header(tableData.bufnum, tableData.headers, tableData.currentColWidth)
       module.highlight_rows(tableData.bufnum, tableData.headers, tableData.bodyLines, tableData.currentColWidth)
     end
@@ -114,10 +127,10 @@ M.setup_auto_format = function()
   if M.autocmd_group then
     vim.api.nvim_del_augroup_by_id(M.autocmd_group)
   end
-  
+
   M.autocmd_group = vim.api.nvim_create_augroup("DataViewerAutoFormat", { clear = true })
-  
-  vim.api.nvim_create_autocmd({"VimResized", "WinScrolled"}, {
+
+  vim.api.nvim_create_autocmd({ "VimResized", "WinScrolled" }, {
     group = M.autocmd_group,
     callback = function()
       if utils.check_win_valid(M.win_id) then
@@ -185,12 +198,12 @@ M.refresh_current_table = function()
 
   -- Get buffer width
   local bufferWidth = module.get_effective_width(M.win_id)
-  
+
   -- Skip if buffer width hasn't changed and we're in adaptive mode
   if M.adaptive_mode and M.last_buffer_width == bufferWidth then
     return
   end
-  
+
   M.last_buffer_width = bufferWidth
   local headerStr, _ = module.get_win_header_str(M.parsed_data)
 
@@ -230,6 +243,7 @@ M.refresh_current_table = function()
       if headerInfo then
         module.highlight_tables_header(tableData.bufnum, headerInfo)
       end
+      module.highlight_border_lines(tableData.bufnum)
       module.highlight_header(tableData.bufnum, tableData.headers, colMaxWidth)
       module.highlight_rows(tableData.bufnum, tableData.headers, tableData.bodyLines, colMaxWidth)
     end

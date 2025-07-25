@@ -194,14 +194,14 @@ M.create_bufs_empty = function(tablesData)
   for tableName, tableData in pairs(tablesData) do
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_option(buf, "modifiable", false)
-    
+
     -- Check if buffer with this name exists and delete it
     local buf_name = "DataViwer-" .. tableName
     local existing_buf = vim.fn.bufnr(buf_name)
     if existing_buf ~= -1 then
       vim.api.nvim_buf_delete(existing_buf, { force = true })
     end
-    
+
     vim.api.nvim_buf_set_name(buf, buf_name)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.next_table, ":DataViewerNextTable<CR>", KEYMAP_OPTS)
     vim.api.nvim_buf_set_keymap(buf, "n", config.config.keymap.prev_table, ":DataViewerPrevTable<CR>", KEYMAP_OPTS)
@@ -266,9 +266,13 @@ end
 M.highlight_header = function(bufnum, headers, colMaxWidth)
   local curPos = 0 -- Start from beginning of line
   for j, colName in ipairs(headers) do
-    local hlStart = curPos + 1 -- skip boarder
+    -- Highlight delimiter
+    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 2, curPos, curPos + 1)
+
+    local hlStart = curPos + 1 -- skip delimiter
     local hlEnd = hlStart + colMaxWidth[colName]
 
+    -- Highlight column content
     vim.api.nvim_buf_add_highlight(
       bufnum,
       0,
@@ -279,6 +283,9 @@ M.highlight_header = function(bufnum, headers, colMaxWidth)
     )
     curPos = hlEnd -- Move to start of next column
   end
+
+  -- Highlight final delimiter
+  vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 2, curPos, curPos + 1)
 end
 
 ---@param bufnum number
@@ -289,9 +296,13 @@ M.highlight_rows = function(bufnum, headers, bodyLines, colMaxWidth)
   for i = 1, #bodyLines do
     local curPos = 0 -- Start from beginning of line
     for j, colName in ipairs(headers) do
-      local hlStart = curPos + 1 -- skip boarder
+      -- Highlight delimiter
+      vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, i + 3, curPos, curPos + 1)
+
+      local hlStart = curPos + 1 -- skip delimiter
       local hlEnd = hlStart + colMaxWidth[colName]
 
+      -- Highlight column content
       vim.api.nvim_buf_add_highlight(
         bufnum,
         0,
@@ -302,13 +313,49 @@ M.highlight_rows = function(bufnum, headers, bodyLines, colMaxWidth)
       )
       curPos = hlEnd -- Move to start of next column
     end
+
+    -- Highlight final delimiter
+    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, i + 3, curPos, curPos + 1)
   end
 end
 
 ---@param bufnum number
 ---@param info table<string, string | number>
 M.highlight_tables_header = function(bufnum, info)
-  vim.api.nvim_buf_add_highlight(bufnum, 0, "DataViewerFocusTable", 0, info.startPos, info.startPos + #info.name)
+  vim.api.nvim_buf_add_highlight(
+    bufnum,
+    0,
+    config.config.focusTableHighlight,
+    0,
+    info.startPos,
+    info.startPos + #info.name
+  )
+end
+
+---@param bufnum number
+M.highlight_border_lines = function(bufnum)
+  -- Get total line count
+  local line_count = vim.api.nvim_buf_line_count(bufnum)
+
+  -- Highlight the top border line (row 1)
+  local line1 = vim.api.nvim_buf_get_lines(bufnum, 1, 2, false)[1]
+  if line1 then
+    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 1, 0, #line1)
+  end
+
+  -- Highlight the bottom header border line (row 3)
+  local line3 = vim.api.nvim_buf_get_lines(bufnum, 3, 4, false)[1]
+  if line3 then
+    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 3, 0, #line3)
+  end
+
+  -- Highlight the bottom table border line (last line)
+  local last_line = vim.api.nvim_buf_get_lines(bufnum, line_count - 1, line_count, false)[1]
+  if
+    last_line and (last_line:match("^[└┴┘─]+$") or last_line:match("^[┌┬┐─├┼┤└┴┘│]+$"))
+  then
+    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, line_count - 1, 0, #last_line)
+  end
 end
 
 ---@param args string
@@ -411,7 +458,7 @@ end
 M.show_cell_popup = function(content, columnName)
   -- Convert content to string if it's not already
   content = tostring(content)
-  
+
   -- Create a scratch buffer for the popup
   local buf = vim.api.nvim_create_buf(false, true)
 

@@ -38,7 +38,9 @@ local DefaultConfig = {
   skipSqlite = false,
   maxLineEachTable = 100,
   columnColorEnable = true,
-  columnColorRoulette = { "DataViewerColumn0", "DataViewerColumn1", "DataViewerColumn2" },
+  columnColorRoulette = { "DataViewerColumn1", "DataViewerColumn2", "DataViewerColumn3" },
+  delimiterHighlight = "DataViewerDelimiter",
+  focusTableHighlight = "DataViewerFocusTable",
   view = ViewConfig,
   keymap = KeymapConfig,
 }

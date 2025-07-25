@@ -5,5 +5,7 @@ end
 local config = require("data-viewer.config")
 
 if config.config.autoDisplayWhenOpenFile then
-  vim.schedule(function () require("data-viewer").start({ args = "" }) end)
+  vim.schedule(function()
+    require("data-viewer").start({ args = "" })
+  end)
 end
