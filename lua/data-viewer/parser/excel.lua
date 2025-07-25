@@ -98,7 +98,7 @@ local parse = function(filepath)
   end
 
   -- Use xlsx2csv to convert all sheets to CSV format
-  local cmd = string.format('xlsx2csv -a "%s"', vim.fn.shellescape(filepath))
+  local cmd = string.format('xlsx2csv -a %s', vim.fn.shellescape(filepath))
   local handle = io.popen(cmd)
   if not handle then
     return 'Failed to execute xlsx2csv command'

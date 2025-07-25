@@ -26,6 +26,8 @@ Lightweight neovim plugin provides a table view for inspect data files such as `
 - xls (Excel legacy)
 - ods (LibreOffice Calc)
 
+Excel files will display each sheet as a separate tab that you can navigate between using `Ctrl+N` and `Ctrl+P` (or your configured keybindings).
+
 ## Requirements
 
 - neovim >= 0.8
