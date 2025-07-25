@@ -264,28 +264,36 @@ end
 ---@param headers string[]
 ---@param colMaxWidth table<string, number>
 M.highlight_header = function(bufnum, headers, colMaxWidth)
-  local curPos = 0 -- Start from beginning of line
+  local headerLine = vim.api.nvim_buf_get_lines(bufnum, 2, 3, false)[1]
+  if not headerLine then return end
+  
+  local curBytePos = 0 -- Start from beginning of line (0-indexed for highlight API)
+  
   for j, colName in ipairs(headers) do
-    -- Highlight delimiter
-    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 2, curPos, curPos + 1)
-
-    local hlStart = curPos + 1 -- skip delimiter
-    local hlEnd = hlStart + colMaxWidth[colName]
-
-    -- Highlight column content
+    -- Highlight delimiter (1 byte)
+    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 2, curBytePos, curBytePos + 1)
+    curBytePos = curBytePos + 1 -- Move past delimiter
+    
+    -- Extract substring with exact display width and get its byte length
+    local targetDisplayWidth = colMaxWidth[colName]
+    local extractedContent = vim.fn.strpart(headerLine, curBytePos, targetDisplayWidth, true) -- true = count by display width
+    local contentByteLength = #extractedContent
+    
+    -- Highlight column content using byte positions
     vim.api.nvim_buf_add_highlight(
       bufnum,
       0,
       config.config.columnColorRoulette[(j % #config.config.columnColorRoulette) + 1],
       2,
-      hlStart,
-      hlEnd
+      curBytePos,
+      curBytePos + contentByteLength
     )
-    curPos = hlEnd -- Move to start of next column
+    
+    curBytePos = curBytePos + contentByteLength -- Move to start of next column
   end
 
   -- Highlight final delimiter
-  vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 2, curPos, curPos + 1)
+  vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, 2, curBytePos, curBytePos + 1)
 end
 
 ---@param bufnum number
@@ -294,28 +302,39 @@ end
 ---@param colMaxWidth table<string, number>
 M.highlight_rows = function(bufnum, headers, bodyLines, colMaxWidth)
   for i = 1, #bodyLines do
-    local curPos = 0 -- Start from beginning of line
+    local lineNum = i + 3 -- Body starts at line 4 (0-indexed: line 3)
+    local line = vim.api.nvim_buf_get_lines(bufnum, lineNum, lineNum + 1, false)[1]
+    if not line then goto continue end
+    
+    local curBytePos = 0 -- Start from beginning of line (0-indexed for highlight API)
+    
     for j, colName in ipairs(headers) do
-      -- Highlight delimiter
-      vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, i + 3, curPos, curPos + 1)
-
-      local hlStart = curPos + 1 -- skip delimiter
-      local hlEnd = hlStart + colMaxWidth[colName]
-
-      -- Highlight column content
+      -- Highlight delimiter (1 byte)
+      vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, lineNum, curBytePos, curBytePos + 1)
+      curBytePos = curBytePos + 1 -- Move past delimiter
+      
+      -- Extract substring with exact display width and get its byte length
+      local targetDisplayWidth = colMaxWidth[colName]
+      local extractedContent = vim.fn.strpart(line, curBytePos, targetDisplayWidth, true) -- true = count by display width
+      local contentByteLength = #extractedContent
+      
+      -- Highlight column content using byte positions
       vim.api.nvim_buf_add_highlight(
         bufnum,
         0,
         config.config.columnColorRoulette[(j % #config.config.columnColorRoulette) + 1],
-        i + 3,
-        hlStart,
-        hlEnd
+        lineNum,
+        curBytePos,
+        curBytePos + contentByteLength
       )
-      curPos = hlEnd -- Move to start of next column
+      
+      curBytePos = curBytePos + contentByteLength -- Move to start of next column
     end
 
     -- Highlight final delimiter
-    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, i + 3, curPos, curPos + 1)
+    vim.api.nvim_buf_add_highlight(bufnum, 0, config.config.delimiterHighlight, lineNum, curBytePos, curBytePos + 1)
+    
+    ::continue::
   end
 end
 
