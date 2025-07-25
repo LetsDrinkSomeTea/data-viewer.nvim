@@ -628,6 +628,7 @@ M.show_cell_popup = function(content, columnName)
     border = 'rounded',
     title = columnName,
     title_pos = 'center',
+    zindex = config.config.view.zindex + 10,
   })
 
   -- Close on cursor move
