@@ -18,17 +18,22 @@ local ViewConfig = {
 ---@field prev_table string
 ---@field toggle_adaptive string
 ---@field expand_cell string
+---@field next_page string
+---@field prev_page string
 local KeymapConfig = {
   quit = 'q',
   next_table = '<C-n>',
   prev_table = '<C-p>',
   toggle_adaptive = '<C-t>',
   expand_cell = '<C-e>',
+  next_page = '<C-j>',
+  prev_page = '<C-k>',
 }
 
 ---@class Config
 ---@field columnColorEnable boolean
 ---@field maxLineEachTable number
+---@field pageSize number
 ---@field columnColorRoulette string[]
 ---@field autoDisplayDsv boolean
 ---@field autoDisplaySqlite boolean
@@ -40,6 +45,7 @@ local DefaultConfig = {
   autoDisplayExcel = true,
   showSqlSequenceTable = false,
   maxLineEachTable = 100,
+  pageSize = 100, -- Default page size for paging mode
   columnColorEnable = true,
   columnColorRoulette = { 'DataViewerColumn1', 'DataViewerColumn2', 'DataViewerColumn3' },
   delimiterHighlight = 'DataViewerDelimiter',

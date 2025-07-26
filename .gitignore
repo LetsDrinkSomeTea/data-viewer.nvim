@@ -3,3 +3,7 @@ test-db.sqlite
 test-csv.csv
 test-xlsx.xlsx
 
+# Test files
+test_*.csv
+PAGING_TEST.md
+

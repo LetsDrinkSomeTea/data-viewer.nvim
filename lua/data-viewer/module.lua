@@ -160,9 +160,14 @@ M.get_win_header_str = function(tablesData)
   local pos = {}
   local header = '|'
   local index = 1
-  for tableName, _ in pairs(tablesData) do
+  for tableName, tableData in pairs(tablesData) do
+    local pageInfo = ''
+    if tableData.totalDataLines and tableData.currentPage and tableData.pageSize then
+      local totalPages = math.ceil(tableData.totalDataLines / tableData.pageSize)
+      pageInfo = string.format(' (Page %d/%d, %d rows)', tableData.currentPage, totalPages, tableData.totalDataLines)
+    end
     table.insert(pos, { name = tableName, startPos = #header + 1 })
-    header = header .. ' ' .. tableName .. ' |'
+    header = header .. ' ' .. tableName .. pageInfo .. ' |'
     index = index + 1
   end
   return header, pos
@@ -210,6 +215,20 @@ M.create_bufs = function(tablesData)
       'n',
       config.config.keymap.expand_cell,
       ':DataViewerExpandCell<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.next_page,
+      ':DataViewerNextPage<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.prev_page,
+      ':DataViewerPrevPage<CR>',
       KEYMAP_OPTS
     )
     tablesData[tableName]['bufnum'] = buf
@@ -269,6 +288,20 @@ M.create_bufs_empty = function(tablesData)
       'n',
       config.config.keymap.expand_cell,
       ':DataViewerExpandCell<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.next_page,
+      ':DataViewerNextPage<CR>',
+      KEYMAP_OPTS
+    )
+    vim.api.nvim_buf_set_keymap(
+      buf,
+      'n',
+      config.config.keymap.prev_page,
+      ':DataViewerPrevPage<CR>',
       KEYMAP_OPTS
     )
     tablesData[tableName]['bufnum'] = buf

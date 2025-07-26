@@ -50,6 +50,66 @@ Excel files will display each sheet as a separate tab that you can navigate betw
 
 - `:DataViewerToggleAdaptive` -- toggle if the table should be fixed to the buffer size and columns should be streched/truncated or if the table should be displayed as is
 
+- `:DataViewerNextPage` -- navigate to the next page of data (loads next set of rows)
+- `:DataViewerPrevPage` -- navigate to the previous page of data (loads previous set of rows)
+
+## Paging Feature
+
+The plugin now supports paging through large datasets without loading all data into memory at once. This feature is especially useful for very large CSV, TSV, SQLite, and Excel files.
+
+### How it works:
+- Data is loaded in pages of configurable size (default: 100 rows per page)
+- Use `<C-j>` (Ctrl+J) to navigate to the next page
+- Use `<C-k>` (Ctrl+K) to navigate to the previous page  
+- Current page information is displayed in the table header: `TableName (Page 2/10, 1000 rows)`
+- Pages are loaded on-demand, improving performance for large files
+- Works with all supported file types and the adaptive column mode
+
+### Configuration:
+To customize the page size, set the `pageSize` option in your configuration:
+
+```lua
+require('data-viewer').setup({
+  pageSize = 50, -- Load 50 rows per page instead of default 100
+})
+```
+
+### Key Bindings:
+- `<C-j>` or `:DataViewerNextPage` - Next page
+- `<C-k>` or `:DataViewerPrevPage` - Previous page
+
+You can customize these key bindings:
+
+```lua
+require('data-viewer').setup({
+  keymap = {
+    next_page = "<C-j>", -- or any other key combination
+    prev_page = "<C-k>", -- or any other key combination
+  },
+})
+```
+
+### Usage Examples:
+
+1. **View a large CSV file with paging:**
+   ```
+   :DataViewer large_dataset.csv
+   ```
+   Navigate with `<C-j>` (next page) and `<C-k>` (previous page)
+
+2. **Configure smaller page size for detailed viewing:**
+   ```lua
+   require('data-viewer').setup({
+     pageSize = 25, -- Show 25 rows per page
+   })
+   ```
+
+3. **View SQLite table with paging:**
+   ```
+   :DataViewer database.sqlite
+   ```
+   Each table automatically supports paging based on the configured page size
+
 ## Installation
 
 ### Lazy
@@ -82,7 +142,8 @@ local config = {
   autoDisplaySqlite = true, -- Automatically display SQLite files
   autoDisplayExcel = true, -- Automatically display Excel files (xlsx, xls, ods)
   showSqlSequenceTable = false, -- Show sqlite_sequence table in SQLite viewer
-  maxLineEachTable = 100,
+  maxLineEachTable = 100, -- Deprecated: use pageSize for paging functionality
+  pageSize = 100, -- Number of rows per page (used for paging through large datasets)
   columnColorEnable = true,
   columnColorRoulette = { -- Highlight groups for alternating columns
     "DataViewerColumn1",
@@ -105,6 +166,8 @@ local config = {
     prev_table = "<C-p>",
     toggle_adaptive = "<C-t>",
     expand_cell = "<C-e>",
+    next_page = "<C-j>", -- Navigate to next page of data
+    prev_page = "<C-k>", -- Navigate to previous page of data
   },
 }
 ```
