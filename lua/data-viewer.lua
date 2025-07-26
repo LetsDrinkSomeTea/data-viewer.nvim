@@ -22,6 +22,9 @@ M.header_info = {}
 M.adaptive_mode = true
 M.autocmd_group = nil
 M.last_buffer_width = nil
+M.current_filepath = nil
+M.current_filetype = nil
+M.current_page_offsets = {} -- Track current page offset for each table
 
 M.setup = function(args)
   config.setup(args) -- setup config
@@ -66,6 +69,16 @@ M.start = function(opts)
   if type(parsedData) == 'string' then
     vim.print(parsedData)
     return
+  end
+
+  -- Store current file information for paging
+  M.current_filepath = filepath
+  M.current_filetype = ft
+  
+  -- Initialize page offsets for each table
+  M.current_page_offsets = {}
+  for tableName, _ in pairs(parsedData) do
+    M.current_page_offsets[tableName] = 0
   end
 
   local headerStr, headerInfo = module.get_win_header_str(parsedData)
@@ -190,6 +203,9 @@ M.close_tables = function()
   end
   M.parsed_data = {}
   M.last_buffer_width = nil
+  M.current_filepath = nil
+  M.current_filetype = nil
+  M.current_page_offsets = {}
 
   -- Close popup window
   if config.config.view.float and utils.check_win_valid(M.win_id) then
@@ -311,6 +327,83 @@ M.expand_cell = function()
 
   -- Show cell content in floating window
   module.show_cell_popup(cellContent, columnName)
+end
+
+M.next_page = function()
+  if not utils.check_win_valid(M.win_id) then
+    return
+  end
+
+  local currentTableName = M.header_info[M.cur_table].name
+  local tableData = M.parsed_data[currentTableName]
+  
+  if not tableData.pageSize or not tableData.totalDataLines then
+    vim.print('Paging not available for this table')
+    return
+  end
+
+  local currentOffset = M.current_page_offsets[currentTableName] or 0
+  local maxOffset = tableData.totalDataLines - tableData.pageSize
+  
+  if currentOffset < maxOffset then
+    local newOffset = math.min(currentOffset + tableData.pageSize, maxOffset)
+    M.current_page_offsets[currentTableName] = newOffset
+    M.reload_current_table()
+  end
+end
+
+M.prev_page = function()
+  if not utils.check_win_valid(M.win_id) then
+    return
+  end
+
+  local currentTableName = M.header_info[M.cur_table].name
+  local tableData = M.parsed_data[currentTableName]
+  
+  if not tableData.pageSize or not tableData.totalDataLines then
+    vim.print('Paging not available for this table')
+    return
+  end
+
+  local currentOffset = M.current_page_offsets[currentTableName] or 0
+  
+  if currentOffset > 0 then
+    local newOffset = math.max(currentOffset - tableData.pageSize, 0)
+    M.current_page_offsets[currentTableName] = newOffset
+    M.reload_current_table()
+  end
+end
+
+M.reload_current_table = function()
+  if not M.current_filepath or not M.current_filetype then
+    return
+  end
+
+  local currentTableName = M.header_info[M.cur_table].name
+  local currentOffset = M.current_page_offsets[currentTableName] or 0
+  local pageSize = config.config.pageSize
+
+  -- Parse data with new offset
+  local parsedData = parsers[M.current_filetype](M.current_filepath, { offset = currentOffset, limit = pageSize })
+  if type(parsedData) == 'string' then
+    vim.print(parsedData)
+    return
+  end
+
+  -- Update the current table data
+  for tableName, tableData in pairs(parsedData) do
+    if tableName == currentTableName then
+      M.parsed_data[tableName].bodyLines = tableData.bodyLines
+      M.parsed_data[tableName].totalDataLines = tableData.totalDataLines
+      M.parsed_data[tableName].currentPage = tableData.currentPage
+      M.parsed_data[tableName].pageSize = tableData.pageSize
+      break
+    end
+  end
+
+  -- Force refresh by clearing the cached width
+  M.last_buffer_width = nil
+  M.refresh_current_table()
 end
 
 return M

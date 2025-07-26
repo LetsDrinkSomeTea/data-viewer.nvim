@@ -1,4 +1,5 @@
 local utils = require('data-viewer.utils')
+local config = require('data-viewer.config')
 
 ---@param line string
 ---@param delim string
@@ -54,13 +55,43 @@ end
 ---@param delim string
 local function createParse(fileType, delim)
   ---@param filepath string
-  return function(filepath)
-    local lines = utils.read_file(filepath)
-    local headers = getHeaders(lines[1], delim)
-    table.remove(lines, 1)
-    local bodyLines = getBody(lines, headers, delim)
+  ---@param opts? {offset?: number, limit?: number}
+  return function(filepath, opts)
+    opts = opts or {}
+    local offset = opts.offset or 0
+    local limit = opts.limit or config.config.pageSize
+    
+    -- Read first line for headers
+    local allLines = utils.read_file(filepath)
+    if #allLines == 0 then
+      return { [fileType] = { headers = {}, bodyLines = {}, totalDataLines = 0, currentPage = 1, pageSize = limit } }
+    end
+    
+    local headers = getHeaders(allLines[1], delim)
+    
+    -- Get total data lines (excluding header)
+    local totalDataLines = #allLines - 1
+    
+    -- Read data lines with offset and limit
+    local dataLines = {}
+    local startIdx = offset + 2 -- +2 because we skip header (index 1) and apply offset
+    local endIdx = offset + limit + 1 -- +1 to account for header skip
+    
+    for i = startIdx, math.min(endIdx, #allLines) do
+      if allLines[i] then
+        table.insert(dataLines, allLines[i])
+      end
+    end
+    
+    local bodyLines = getBody(dataLines, headers, delim)
     local out = {}
-    out[fileType] = { headers = headers, bodyLines = bodyLines }
+    out[fileType] = { 
+      headers = headers, 
+      bodyLines = bodyLines,
+      totalDataLines = totalDataLines,
+      currentPage = math.floor(offset / limit) + 1,
+      pageSize = limit
+    }
     return out
   end
 end

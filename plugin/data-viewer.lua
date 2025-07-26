@@ -8,6 +8,8 @@ vim.api.nvim_create_user_command(
   {}
 )
 vim.api.nvim_create_user_command('DataViewerExpandCell', require('data-viewer').expand_cell, {})
+vim.api.nvim_create_user_command('DataViewerNextPage', require('data-viewer').next_page, {})
+vim.api.nvim_create_user_command('DataViewerPrevPage', require('data-viewer').prev_page, {})
 
 vim.filetype.add({
   extension = {
