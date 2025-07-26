@@ -75,7 +75,7 @@ local function createParse(fileType, delim)
     -- Read data lines with offset and limit
     local dataLines = {}
     local startIdx = offset + 2 -- +2 because we skip header (index 1) and apply offset
-    local endIdx = offset + limit + 1 -- +1 to account for header skip
+    local endIdx = startIdx + limit - 1 -- Read exactly 'limit' lines starting from startIdx
     
     for i = startIdx, math.min(endIdx, #allLines) do
       if allLines[i] then

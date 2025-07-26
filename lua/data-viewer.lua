@@ -238,7 +238,8 @@ M.refresh_current_table = function()
   end
 
   M.last_buffer_width = bufferWidth
-  local headerStr, _ = module.get_win_header_str(M.parsed_data)
+  local headerStr, headerInfo = module.get_win_header_str(M.parsed_data)
+  M.header_info = headerInfo
 
   -- Refresh all tables to ensure consistency
   for tableName, tableData in pairs(M.parsed_data) do
@@ -343,7 +344,8 @@ M.next_page = function()
   end
 
   local currentOffset = M.current_page_offsets[currentTableName] or 0
-  local maxOffset = tableData.totalDataLines - tableData.pageSize
+  local totalPages = math.ceil(tableData.totalDataLines / tableData.pageSize)
+  local maxOffset = (totalPages - 1) * tableData.pageSize
   
   if currentOffset < maxOffset then
     local newOffset = math.min(currentOffset + tableData.pageSize, maxOffset)
