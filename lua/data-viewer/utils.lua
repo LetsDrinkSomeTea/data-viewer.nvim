@@ -118,7 +118,7 @@ M.truncateString = function(str, maxWidth)
     local substr = string.sub(str, 1, mid)
     local width = vim.fn.strdisplaywidth(substr)
 
-    if width <= maxWidth - 3 then -- Leave space for ellipsis
+    if width <= maxWidth - 1 then -- Leave space for ellipsis
       bestEnd = mid
       left = mid + 1
     else
@@ -126,7 +126,7 @@ M.truncateString = function(str, maxWidth)
     end
   end
 
-  return string.sub(str, 1, bestEnd) .. '...'
+  return string.sub(str, 1, bestEnd) .. '…'
 end
 
 return M
