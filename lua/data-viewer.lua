@@ -65,7 +65,7 @@ M.start = function(opts)
     return
   end
 
-  local parsedData = parsers[ft](filepath)
+  local parsedData = parsers[ft](filepath, { offset = 0, limit = config.config.pageSize })
   if type(parsedData) == 'string' then
     vim.print(parsedData)
     return
