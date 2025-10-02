@@ -57,7 +57,7 @@ Excel files will display each sheet as a separate tab that you can navigate betw
 ```lua
 require("lazy").setup({
   {
-    'vidocqh/data-viewer.nvim',
+    'LetsDrinkSomeTea/data-viewer.nvim',
     opts = {},
     dependencies = {
       "kkharji/sqlite.lua", -- Optional, sqlite support
