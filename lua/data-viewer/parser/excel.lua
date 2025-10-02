@@ -53,8 +53,13 @@ end
 
 ---@param csvData string
 ---@param sheetName string
+---@param opts? {offset?: number, limit?: number}
 ---@return table
-local function parseSheet(csvData, sheetName)
+local function parseSheet(csvData, sheetName, opts)
+  opts = opts or {}
+  local offset = opts.offset or 0
+  local limit = opts.limit or config.config.pageSize
+  
   local lines = vim.split(csvData, '\n', { plain = true })
 
   -- Remove empty lines
@@ -66,30 +71,42 @@ local function parseSheet(csvData, sheetName)
   end
 
   if #filteredLines == 0 then
-    return { headers = {}, bodyLines = {} }
+    return { headers = {}, bodyLines = {}, totalDataLines = 0, currentPage = 1, pageSize = limit }
   end
 
   local headers = getHeaders(filteredLines[1], ',')
   table.remove(filteredLines, 1)
+  local totalDataLines = #filteredLines
+  
+  -- Apply paging to the data lines
   local bodyLines = getBody(filteredLines, headers, ',')
-
-  -- Limit lines if configured
-  if config.config.maxLineEachTable >= 0 and #bodyLines > config.config.maxLineEachTable then
-    local limitedBodyLines = {}
-    for i = 1, config.config.maxLineEachTable do
-      table.insert(limitedBodyLines, bodyLines[i])
+  local pagedBodyLines = {}
+  local startIdx = offset + 1
+  local endIdx = offset + limit
+  
+  for i = startIdx, math.min(endIdx, #bodyLines) do
+    if bodyLines[i] then
+      table.insert(pagedBodyLines, bodyLines[i])
     end
-    bodyLines = limitedBodyLines
   end
 
-  return { headers = headers, bodyLines = bodyLines }
+  return { 
+    headers = headers, 
+    bodyLines = pagedBodyLines,
+    totalDataLines = totalDataLines,
+    currentPage = math.floor(offset / limit) + 1,
+    pageSize = limit
+  }
 end
 
 ---@param filepath string|integer
-local parse = function(filepath)
+---@param opts? {offset?: number, limit?: number}
+local parse = function(filepath, opts)
   if type(filepath) == 'number' then
     filepath = vim.api.nvim_buf_get_name(filepath)
   end
+
+  opts = opts or {}
 
   -- Check if xlsx2csv is available
   local xlsx2csv_available = vim.fn.executable('xlsx2csv') == 1
@@ -141,7 +158,7 @@ local parse = function(filepath)
   for sheetName, sheetLines in pairs(sheets) do
     if #sheetLines > 0 then
       local sheetData = table.concat(sheetLines, '\n')
-      local parsedSheet = parseSheet(sheetData, sheetName)
+      local parsedSheet = parseSheet(sheetData, sheetName, opts)
       if #parsedSheet.headers > 0 then
         tablesData[sheetName] = parsedSheet
       end
@@ -150,7 +167,7 @@ local parse = function(filepath)
 
   -- If no sheets were found with the delimiter method, try parsing as single sheet
   if vim.tbl_isempty(tablesData) then
-    local singleSheetData = parseSheet(output, 'Sheet')
+    local singleSheetData = parseSheet(output, 'Sheet', opts)
     if #singleSheetData.headers > 0 then
       tablesData['Sheet'] = singleSheetData
     end

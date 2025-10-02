@@ -23,15 +23,25 @@ local get_table_column_names = function(db, table_name)
   return table_columns
 end
 
-local get_table_data = function(db, table_name)
-  local opts = config.config.maxLineEachTable >= 0 and { limit = config.config.maxLineEachTable }
-    or {}
-  local query = db:select(table_name, opts)
-  return query
+local get_table_data = function(db, table_name, opts)
+  opts = opts or {}
+  local limit = opts.limit or config.config.pageSize
+  local offset = opts.offset or 0
+  
+  -- First get total count
+  local countQuery = db:eval("SELECT COUNT(*) as count FROM " .. table_name)
+  local totalCount = countQuery[1] and countQuery[1].count or 0
+  
+  -- Then get paginated data
+  local paginatedOpts = { limit = limit, offset = offset }
+  local query = db:select(table_name, paginatedOpts)
+  
+  return query, totalCount
 end
 
 ---@param filepath string|integer
-local parse = function(filepath)
+---@param opts? {offset?: number, limit?: number}
+local parse = function(filepath, opts)
   if not status then
     return 'SQL dependency not installed'
   end
@@ -40,13 +50,21 @@ local parse = function(filepath)
     filepath = vim.api.nvim_buf_get_name(filepath)
   end
 
+  opts = opts or {}
+  local offset = opts.offset or 0
+  local limit = opts.limit or config.config.pageSize
+
   local tables_data = sqlite.with_open(filepath, function(db)
     local tables_data = {}
     local db_tables_names = get_all_table_names(db)
     for _, table_name in ipairs(db_tables_names) do
       tables_data[table_name] = {}
-      tables_data[table_name]['bodyLines'] = get_table_data(db, table_name)
+      local bodyLines, totalCount = get_table_data(db, table_name, { offset = offset, limit = limit })
+      tables_data[table_name]['bodyLines'] = bodyLines
       tables_data[table_name]['headers'] = get_table_column_names(db, table_name)
+      tables_data[table_name]['totalDataLines'] = totalCount
+      tables_data[table_name]['currentPage'] = math.floor(offset / limit) + 1
+      tables_data[table_name]['pageSize'] = limit
     end
     return tables_data
   end)
